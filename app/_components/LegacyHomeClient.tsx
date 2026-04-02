@@ -378,13 +378,13 @@ export function LegacyHomeClient() {
             </h3>
           </motion.div>
 
-          <div className="mt-10 grid items-start gap-10 overflow-visible md:mt-12 md:grid-cols-2 md:gap-14">
+          <div className="mt-10 md:mt-12">
             <motion.div
               initial={shouldReduceMotion ? false : { opacity: 0, x: 48 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, margin: "-12%" }}
               transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] as const }}
-              className="relative z-10 order-2 min-w-0 md:order-1 md:w-[150%] md:max-w-none"
+              className="relative z-10 min-w-0"
             >
               <ul className="space-y-4">
                 {[
@@ -429,29 +429,6 @@ export function LegacyHomeClient() {
                 ))}
               </ul>
             </motion.div>
-          <motion.div
-            initial={shouldReduceMotion ? false : { opacity: 0, x: 48 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-12%" }}
-            transition={{ duration: 0.65, delay: 0.08, ease: [0.22, 1, 0.36, 1] as const }}
-            className="relative z-0 order-1 aspect-[4/5] w-full overflow-hidden md:order-2 md:h-full md:aspect-auto"
-          >
-            <Image
-              src="/campaign/brand.png"
-              alt=""
-              fill
-              className="object-cover object-center [mask-image:linear-gradient(to_right,transparent_0%,#000_12%,#000_88%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_right,transparent_0%,#000_12%,#000_88%,transparent_100%)]"
-              sizes="(max-width: 768px) 100vw, 50vw"
-            />
-            <div
-              className="pointer-events-none absolute inset-y-0 left-0 w-[35%] bg-gradient-to-r from-black via-black/40 to-transparent blur-2xl"
-              aria-hidden
-            />
-            <div
-              className="pointer-events-none absolute inset-y-0 right-0 w-[40%] bg-gradient-to-l from-black via-black/35 to-transparent blur-2xl"
-              aria-hidden
-            />
-          </motion.div>
           </div>
         </div>
       </motion.section>
