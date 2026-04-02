@@ -85,123 +85,46 @@ const TEAM_MEMBERS = [
   },
 ] as const;
 
+const fadeInUp = {
+  hidden: { opacity: 0, y: 28 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.55 },
+  },
+};
+
+const fadeInReduced = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.2 } },
+};
+
 export default function TeamPage() {
   const shouldReduceMotion = useReducedMotion() ?? false;
-
-  const titleVariants = shouldReduceMotion
-    ? { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.35 } } }
-    : {
-        hidden: { opacity: 0, y: -28, filter: "blur(10px)" },
-        visible: {
-          opacity: 1,
-          y: 0,
-          filter: "blur(0px)",
-          transition: { duration: 0.75, ease: [0.22, 1, 0.36, 1] as const },
-        },
-      };
-
-  const gridContainerVariants = {
-    hidden: {},
-    visible: {
-      transition: shouldReduceMotion
-        ? {}
-        : { staggerChildren: 0.16, delayChildren: 0.12 },
-    },
-  };
-
-  const cardVariants = {
-    hidden: shouldReduceMotion
-      ? { opacity: 0 }
-      : {
-          opacity: 0,
-          y: 56,
-          scale: 0.88,
-          rotateX: 8,
-          filter: "blur(12px)",
-        },
-    visible: (i: number) =>
-      shouldReduceMotion
-        ? { opacity: 1, transition: { duration: 0.35 } }
-        : {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            rotateX: 0,
-            filter: "blur(0px)",
-            transition: {
-              type: "spring" as const,
-              stiffness: 120,
-              damping: 16,
-              mass: 0.85,
-              delay: i * 0.04,
-            },
-          },
-  };
+  const cardVariants = shouldReduceMotion ? fadeInReduced : fadeInUp;
 
   return (
     <div className="bg-[#0A0A0A] text-white selection:bg-[#CFFF1A] selection:text-black">
       {/* 核心成員 */}
       <section id="team" className="scroll-mt-28 px-6 py-24">
         <div className="mx-auto max-w-7xl">
-          <motion.h2
-            className="mb-14 text-center text-4xl font-black md:text-5xl"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-8%" }}
-            variants={titleVariants}
-          >
-            協會理事介紹
-          </motion.h2>
-          <motion.div
-            className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-            style={{ perspective: 1200 }}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-12%" }}
-            variants={gridContainerVariants}
-          >
-            {TEAM_MEMBERS.map((member, i) => (
+          <h2 className="mb-14 text-center text-4xl font-black md:text-5xl">協會理事介紹</h2>
+          <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {TEAM_MEMBERS.map((member) => (
               <motion.div
                 key={member.name}
-                custom={i}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-8%" }}
                 variants={cardVariants}
+                whileHover={shouldReduceMotion ? undefined : { y: -6 }}
                 className="flex h-full min-h-0 flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left"
-                style={{ transformStyle: "preserve-3d" }}
-                whileHover={
-                  shouldReduceMotion
-                    ? undefined
-                    : { y: -4, transition: { type: "spring", stiffness: 400, damping: 22 } }
-                }
               >
-                <motion.div
-                  className="relative mb-4 aspect-square w-20 overflow-hidden rounded-xl border border-white/10 bg-white/5"
-                  initial={false}
-                  animate={
-                    shouldReduceMotion
-                      ? undefined
-                      : {
-                          boxShadow: [
-                            "0 0 0 rgba(207,255,26,0)",
-                            "0 0 40px rgba(207,255,26,0.25)",
-                            "0 0 0 rgba(207,255,26,0)",
-                          ],
-                        }
-                  }
-                  transition={
-                    shouldReduceMotion
-                      ? undefined
-                      : { duration: 2.2, repeat: Infinity, repeatDelay: 3.5, ease: "easeInOut" }
-                  }
-                >
-                  {!shouldReduceMotion ? (
-                    <motion.div
-                      className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-[#0A0A0A]/55 via-transparent to-[#CFFF1A]/10"
-                      initial={{ opacity: 0 }}
-                      whileInView={{ opacity: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.9, delay: 0.15 + i * 0.08 }}
-                    />
-                  ) : null}
+                <div className="relative mb-4 aspect-square w-20 overflow-hidden rounded-xl border border-white/10 bg-white/5">
+                  <div
+                    className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-[#0A0A0A]/55 via-transparent to-[#CFFF1A]/10"
+                    aria-hidden
+                  />
                   <Image
                     src={member.image}
                     alt={member.name}
@@ -209,20 +132,14 @@ export default function TeamPage() {
                     sizes="80px"
                     className="object-cover"
                   />
-                </motion.div>
-                <motion.p
-                  className="break-words text-lg font-black leading-snug tracking-tight"
-                  initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
-                  whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.45, delay: 0.2 + i * 0.1 }}
-                >
+                </div>
+                <p className="break-words text-lg font-black leading-snug tracking-tight">
                   {member.name}｜{member.title}
-                </motion.p>
+                </p>
                 <p className="mt-2 flex-1 text-sm leading-relaxed text-gray-300">{member.bio}</p>
               </motion.div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 

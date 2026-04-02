@@ -275,7 +275,7 @@ export function LegacyHomeClient() {
               CREATOR POWER
             </p>
             <h3 className="text-3xl font-black leading-[1.2] text-white md:text-4xl">
-              個人會員：從創作者升級商業夥伴
+              個人會員：創作者升級
             </h3>
           </motion.div>
 
@@ -374,7 +374,7 @@ export function LegacyHomeClient() {
           >
             <p className="text-xs font-black tracking-[0.3em] text-white/50">BRAND SYNERGY</p>
             <h3 className="text-3xl font-black md:text-4xl">
-              團體會員：企業的外部策略夥伴
+              團體會員：企業的策略夥伴
             </h3>
           </motion.div>
 
