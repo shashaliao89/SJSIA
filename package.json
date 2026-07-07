@@ -1,0 +1,14 @@
+{
+  "name": "sjsia-monorepo",
+  "private": true,
+  "scripts": {
+    "db:up": "docker compose -p sjsia up -d",
+    "db:down": "docker compose -p sjsia down",
+    "db:reset": "docker compose -p sjsia down -v && docker compose -p sjsia up -d",
+    "backend:dev": "npm run dev --prefix backend",
+    "backend:migrate": "npm run db:migrate --prefix backend",
+    "backend:seed": "npm run db:seed --prefix backend",
+    "portal:dev": "npm run dev --prefix portal",
+    "site:dev": "npm run dev --prefix site"
+  }
+}

@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+:root {
+  --sjsia-bg: #0a0a0a;
+  --sjsia-bg-elevated: #111111;
+  --sjsia-teal: #00332b;
+  --sjsia-teal-deep: #001f1c;
+  --sjsia-accent: #cfff1a;
+  --sjsia-accent-muted: rgb(207 255 26 / 0.12);
+  --sjsia-border: rgb(255 255 255 / 0.1);
+  --sjsia-text-muted: #9ca3af;
+  --background: var(--sjsia-bg);
+  --foreground: #ededed;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-sjsia-accent: var(--sjsia-accent);
+  --color-sjsia-teal: var(--sjsia-teal);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--sjsia-bg);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: var(--sjsia-accent);
+  color: var(--sjsia-bg);
+}
+
+/* 全站共用：區塊標籤 / 卡片 */
+.site-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  color: rgb(207 255 26 / 0.75);
+}
+
+.site-card {
+  border-radius: 1.5rem;
+  border: 1px solid var(--sjsia-border);
+  background: rgb(255 255 255 / 0.04);
+  backdrop-filter: blur(12px);
+}
+
+.site-card-highlight {
+  border-color: rgb(207 255 26 / 0.35);
+  background: var(--sjsia-accent-muted);
+}
