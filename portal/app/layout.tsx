@@ -7,10 +7,16 @@ export const metadata: Metadata = {
   description: "盛家運動健康產業協會會員後台系統",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover" as const,
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-Hant">
-      <body>
+      <body className="overflow-x-hidden antialiased">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

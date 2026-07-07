@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
@@ -18,10 +18,47 @@ interface DashboardShellProps {
   children: ReactNode;
 }
 
+function NavLinks({
+  nav,
+  pathname,
+  onNavigate,
+  className,
+  linkClassName,
+}: {
+  nav: NavItem[];
+  pathname: string;
+  onNavigate?: () => void;
+  className?: string;
+  linkClassName?: (active: boolean) => string;
+}) {
+  return (
+    <nav className={className}>
+      {nav.map((item) => {
+        const active = pathname === item.href;
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={onNavigate}
+            className={cn(
+              "rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors",
+              active ? "bg-[#CFFF1A] text-black" : "text-gray-300 hover:bg-white/5 hover:text-white",
+              linkClassName?.(active)
+            )}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
 export function DashboardShell({ role, title, nav, children }: DashboardShellProps) {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -34,64 +71,114 @@ export function DashboardShell({ role, title, nav, children }: DashboardShellPro
     }
   }, [user, loading, role, router]);
 
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileNavOpen]);
+
   if (loading || !user || user.role !== role) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-gray-400">
+      <div className="flex min-h-[100dvh] items-center justify-center text-gray-400">
         載入中…
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white">
-      <header className="border-b border-white/10 px-6 py-4">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
-          <div>
-            <p className="text-xs font-bold tracking-widest text-[#CFFF1A]">SJSIA PORTAL</p>
-            <h1 className="text-xl font-black">{title}</h1>
+    <div className="min-h-[100dvh] bg-[#0A0A0A] text-white">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0A0A0A]/95 backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold tracking-widest text-[#CFFF1A] sm:text-xs">SJSIA PORTAL</p>
+            <h1 className="truncate text-lg font-black sm:text-xl">{title}</h1>
           </div>
-          <div className="flex items-center gap-4 text-sm">
-            <span className="hidden text-gray-400 sm:inline">{user.email}</span>
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <button
+              type="button"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 text-white hover:bg-white/5 lg:hidden"
+              aria-expanded={mobileNavOpen}
+              aria-label={mobileNavOpen ? "關閉選單" : "開啟選單"}
+              onClick={() => setMobileNavOpen((open) => !open)}
+            >
+              {mobileNavOpen ? (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              )}
+            </button>
+            <span className="hidden max-w-[12rem] truncate text-sm text-gray-400 md:inline">{user.email}</span>
             <button
               type="button"
               onClick={() => {
                 logout();
                 router.push("/login");
               }}
-              className="rounded-lg border border-white/15 px-3 py-1.5 font-semibold hover:border-[#CFFF1A]/50"
+              className="rounded-lg border border-white/15 px-3 py-2 text-sm font-semibold hover:border-[#CFFF1A]/50"
             >
               登出
             </button>
           </div>
         </div>
+
+        {/* 手機：橫向滑動快捷導覽 */}
+        <div className="border-t border-white/10 px-4 pb-3 pt-2 lg:hidden">
+          <NavLinks
+            nav={nav}
+            pathname={pathname}
+            className="flex gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            linkClassName={(active) =>
+              cn(
+                "shrink-0 whitespace-nowrap px-4 py-2.5 text-sm",
+                active ? "bg-[#CFFF1A] text-black" : "border border-white/10 bg-white/[0.03]"
+              )
+            }
+          />
+        </div>
       </header>
 
       {user.status !== "approved" && user.role !== "admin" && (
-        <div className="border-b border-yellow-500/30 bg-yellow-500/10 px-6 py-3 text-center text-sm font-semibold text-yellow-200">
+        <div className="border-b border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-center text-sm font-semibold leading-relaxed text-yellow-200 sm:px-6">
           您的帳號目前為「待審核」狀態，部分功能可能無法使用，請等待協會審核通過。
         </div>
       )}
 
-      <div className="mx-auto grid max-w-7xl gap-8 px-6 py-8 lg:grid-cols-[220px_1fr]">
-        <aside className="h-fit rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-          <nav className="flex flex-col gap-1">
-            {nav.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors",
-                  pathname === item.href
-                    ? "bg-[#CFFF1A] text-black"
-                    : "text-gray-300 hover:bg-white/5 hover:text-white"
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+      {/* 手機全屏選單 */}
+      {mobileNavOpen ? (
+        <div
+          className="fixed inset-0 z-30 bg-[#0A0A0A]/95 backdrop-blur-sm lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="導覽選單"
+        >
+          <div className="flex h-full flex-col px-4 pb-6 pt-20">
+            <NavLinks
+              nav={nav}
+              pathname={pathname}
+              onNavigate={() => setMobileNavOpen(false)}
+              className="flex flex-col gap-2"
+              linkClassName={() => "px-4 py-3.5 text-base"}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:grid lg:grid-cols-[220px_1fr] lg:gap-8">
+        <aside className="hidden h-fit rounded-2xl border border-white/10 bg-white/[0.03] p-3 lg:block">
+          <NavLinks nav={nav} pathname={pathname} className="flex flex-col gap-1" />
         </aside>
-        <main>{children}</main>
+        <main className="min-w-0">{children}</main>
       </div>
     </div>
   );

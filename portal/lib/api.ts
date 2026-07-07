@@ -14,14 +14,24 @@ export async function api<T>(
   options: RequestInit & { token?: string | null } = {}
 ): Promise<T> {
   const { token, headers, ...rest } = options;
-  const res = await fetch(`${API_URL}${path}`, {
-    ...rest,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...headers,
-    },
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      ...rest,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...headers,
+      },
+    });
+  } catch {
+    throw new ApiError(
+      API_URL.includes("localhost")
+        ? "無法連線 API，請確認 Backend 已啟動，或 Vercel 已設定 NEXT_PUBLIC_API_URL"
+        : "網路連線失敗，請檢查網路後再試",
+      0
+    );
+  }
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
