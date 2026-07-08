@@ -46,6 +46,7 @@ const CORE_CREATORS = [
     instagram: "https://www.instagram.com/huangluck?igsh=aGRmYWY3cGRrMDhq&utm_source=qr",
   },
   { name: "Audrey", image: "/creators/audrey.png", instagram: "https://www.instagram.com/audrey_kuan0826/" },
+  { name: "Jeffrey", image: "/creators/jeffrey.png", instagram: "https://www.instagram.com/jeffrey0932/" },
 ] as const;
 
 const fadeInUp = {
