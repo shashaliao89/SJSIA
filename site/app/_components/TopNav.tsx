@@ -103,7 +103,7 @@ export function TopNav() {
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <a
               href={PORTAL_LOGIN_URL}
-              className="hidden sm:inline-flex rounded-full border border-white/20 px-4 py-2 text-xs sm:text-sm font-bold text-white hover:border-[#CFFF1A]/50 hover:text-[#CFFF1A] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#CFFF1A]"
+              className="hidden md:inline-flex rounded-full border border-white/20 px-4 py-2 text-sm font-bold text-white hover:border-[#CFFF1A]/50 hover:text-[#CFFF1A] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#CFFF1A]"
             >
               會員後台
             </a>
@@ -155,13 +155,6 @@ export function TopNav() {
                 </Link>
               );
             })}
-            <a
-              href={PORTAL_LOGIN_URL}
-              className="rounded-xl px-4 py-4 border border-white/10 text-white hover:bg-white/5"
-              onClick={() => setMobileOpen(false)}
-            >
-              會員後台
-            </a>
           </div>
           <a
             href={FORM_URL}
