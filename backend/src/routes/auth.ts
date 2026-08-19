@@ -10,7 +10,7 @@ const router = Router();
 
 const registerSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(8),
   role: z.enum(["brand", "kol"]),
   brandName: z.string().optional(),
   kolName: z.string().optional(),
@@ -120,6 +120,13 @@ router.post("/login", async (req, res) => {
   const ok = await bcrypt.compare(password, row.password_hash);
   if (!ok) {
     return res.status(401).json({ error: "帳號或密碼錯誤" });
+  }
+
+  if (row.status === "suspended") {
+    return res.status(403).json({ error: "此帳號已停用，請聯繫協會管理員" });
+  }
+  if (row.membership_expires_at && new Date(row.membership_expires_at) <= new Date()) {
+    return res.status(403).json({ error: "會員資格已到期，請聯繫協會續約" });
   }
 
   const user = {

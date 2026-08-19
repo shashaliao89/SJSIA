@@ -85,6 +85,11 @@ docker compose down -v     # 清除 volume（重置 DB）
 | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` 或手動貼上 |
 | `JWT_SECRET` | 長隨機字串（至少 32 字元） |
 | `CORS_ORIGIN` | Portal 正式網址，例如 `https://portal-xxx.vercel.app` |
+| `GOOGLE_SHEET_ID` | `1WPK49aS2cWfGjT56HUJHjRwKhFFrnx0bFgkBl1ZFnRA` |
+| `GOOGLE_SHEET_NAME` | `會員名單_整理` |
+| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | Google Cloud Service Account Email |
+| `GOOGLE_PRIVATE_KEY` | Google Cloud Service Account Private Key |
+| `MAIL_FROM` | `shasha.liao@stepc.co` |
 | `PORT` | Railway 通常自動注入，可不設 |
 
 5. **Deploy** 後，`npm start` 會自動跑 migration（見 `backend/package.json`）
@@ -96,6 +101,14 @@ npm run db:seed
 
 7. 記下 Public Domain，例如：`https://sjsia-portal-api-production.up.railway.app`
 8. 驗證：`GET https://<api-domain>/health` → `{"ok":true}`
+
+### Google Sheets 會員名單自動同步
+
+1. 將試算表以「檢視者」權限分享給 `GOOGLE_SERVICE_ACCOUNT_EMAIL`。
+2. Railway 新增 Cron Service，使用同一個 Backend 與環境變數。
+3. Cron Command 設為 `npm run db:sync-members`，建議每天執行一次。
+4. 同步僅讀取：IG 顯示名稱、Instagram／品牌連結、粉絲數（原始）、合作報價、登船狀態／方案。
+5. 品牌端 API 不會回傳合作報價與登船狀態；僅管理員可見。
 
 ### 設定檔
 
@@ -159,9 +172,9 @@ npm run db:seed
 
 | 服務 | 建議子網域 |
 |------|------------|
-| 官網 | `www.sjsia.tw` 或 `sjsia.tw` |
-| Portal | `portal.sjsia.tw` 或 `member.sjsia.tw` |
-| API | `api.sjsia.tw`（Railway Custom Domain） |
+| 官網 | `sjsia.org` |
+| Portal | `portal.sjsia.org` |
+| API | `api.sjsia.org`（Railway Custom Domain，可選） |
 
 設定自訂網域後，記得同步更新：
 

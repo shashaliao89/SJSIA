@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { api, STATUS_LABELS } from "@/lib/api";
+import { ApiError, api, STATUS_LABELS } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import type { Campaign, CampaignApplication } from "@/lib/types";
 import { DashboardShell, PageHeader, Card, Button, Badge, EmptyState } from "@/components/DashboardShell";
@@ -14,6 +14,8 @@ export default function BrandCampaignsPage() {
   const [applications, setApplications] = useState<Record<string, CampaignApplication[]>>({});
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
   async function loadCampaigns() {
     const data = await api<{ campaigns: Campaign[] }>("/api/campaigns", { token });
@@ -44,6 +46,30 @@ export default function BrandCampaignsPage() {
     }
   }
 
+  async function deleteCampaign(campaign: Campaign) {
+    const confirmed = window.confirm(
+      `確定要刪除「${campaign.title}」嗎？相關的 KOL 申請紀錄也會一併移除，此操作無法復原。`
+    );
+    if (!confirmed) return;
+
+    setError("");
+    setDeletingId(campaign.id);
+    try {
+      await api(`/api/campaigns/${campaign.id}`, { method: "DELETE", token });
+      setCampaigns((current) => current.filter((item) => item.id !== campaign.id));
+      setApplications((current) => {
+        const next = { ...current };
+        delete next[campaign.id];
+        return next;
+      });
+      if (expandedId === campaign.id) setExpandedId(null);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "刪除案件失敗，請稍後再試");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   return (
     <DashboardShell role="brand" title="品牌方 Dashboard" nav={BRAND_NAV}>
       <PageHeader
@@ -55,6 +81,7 @@ export default function BrandCampaignsPage() {
           <Button>新增合作案件</Button>
         </Link>
       </div>
+      {error ? <p className="mb-4 text-sm font-semibold text-red-400">{error}</p> : null}
       {loading ? (
         <EmptyState message="載入中…" />
       ) : campaigns.length === 0 ? (
@@ -82,11 +109,20 @@ export default function BrandCampaignsPage() {
                     {STATUS_LABELS[c.status] ?? c.status}
                   </Badge>
                 </div>
-                {c.status === "approved" ? (
-                  <Button variant="secondary" onClick={() => toggleApplications(c.id)}>
-                    {expandedId === c.id ? "收合申請者" : "查看通過審核的 KOL 申請"}
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row md:justify-end">
+                  {c.status === "approved" ? (
+                    <Button variant="secondary" onClick={() => toggleApplications(c.id)}>
+                      {expandedId === c.id ? "收合申請者" : "查看通過審核的 KOL 申請"}
+                    </Button>
+                  ) : null}
+                  <Button
+                    variant="danger"
+                    disabled={deletingId === c.id}
+                    onClick={() => deleteCampaign(c)}
+                  >
+                    {deletingId === c.id ? "刪除中…" : "刪除案件"}
                   </Button>
-                ) : null}
+                </div>
               </div>
               {expandedId === c.id ? (
                 <div className="mt-4 border-t border-white/10 pt-4">

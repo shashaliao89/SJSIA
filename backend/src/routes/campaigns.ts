@@ -113,6 +113,19 @@ router.put("/:id", requireAuth, requireRole("admin"), async (req, res) => {
   res.json({ campaign: result.rows[0] });
 });
 
+router.delete("/:id", requireAuth, requireRole("brand"), requireApproved, async (req, res) => {
+  const result = await pool.query(
+    `DELETE FROM campaigns
+     WHERE id = $1 AND brand_user_id = $2
+     RETURNING id`,
+    [req.params.id, req.user!.id]
+  );
+  if (result.rows.length === 0) {
+    return res.status(404).json({ error: "找不到案件，或您沒有刪除權限" });
+  }
+  res.json({ ok: true });
+});
+
 router.post("/:id/apply", requireAuth, requireRole("kol"), requireApproved, async (req, res) => {
   const { message } = req.body as { message?: string };
   const campaign = await pool.query(

@@ -40,9 +40,12 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-[#0A0A0A] px-4 py-8 text-white sm:px-6 sm:py-12">
       <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8">
-        <Link href="/" className="text-sm font-black text-[#CFFF1A]">
-          ← SJSIA Portal
-        </Link>
+        <a
+          href={process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}
+          className="text-sm font-black text-[#CFFF1A]"
+        >
+          ← 返回協會官網
+        </a>
         <h1 className="mt-4 text-3xl font-black">會員註冊</h1>
         <p className="mt-2 text-sm text-gray-400">註冊後需等待協會審核通過</p>
 
@@ -86,11 +89,11 @@ export default function RegisterPage() {
             />
           </div>
           <div>
-            <label htmlFor="password">密碼（至少 6 碼）</label>
+            <label htmlFor="password">密碼（至少 8 碼）</label>
             <input
               id="password"
               type="password"
-              minLength={6}
+              minLength={8}
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}

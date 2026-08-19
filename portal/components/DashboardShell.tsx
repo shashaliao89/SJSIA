@@ -101,6 +101,12 @@ export function DashboardShell({ role, title, nav, children }: DashboardShellPro
             <h1 className="truncate text-lg font-black sm:text-xl">{title}</h1>
           </div>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <a
+              href={process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}
+              className="hidden rounded-lg border border-white/15 px-3 py-2 text-sm font-semibold text-gray-300 hover:border-[#CFFF1A]/50 hover:text-white sm:inline-flex"
+            >
+              協會官網
+            </a>
             <button
               type="button"
               className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 text-white hover:bg-white/5 lg:hidden"
@@ -153,6 +159,12 @@ export function DashboardShell({ role, title, nav, children }: DashboardShellPro
           您的帳號目前為「待審核」狀態，部分功能可能無法使用，請等待協會審核通過。
         </div>
       )}
+
+      {user.role !== "admin" && user.membership_expires_at ? (
+        <div className="border-b border-white/10 bg-white/[0.03] px-4 py-2 text-center text-xs font-semibold text-gray-400 sm:px-6">
+          會員效期至 {new Date(user.membership_expires_at).toLocaleDateString("zh-TW")}
+        </div>
+      ) : null}
 
       {/* 手機全屏選單 */}
       {mobileNavOpen ? (
@@ -265,5 +277,55 @@ export function EmptyState({ message }: { message: string }) {
     <Card>
       <p className="text-center text-gray-400">{message}</p>
     </Card>
+  );
+}
+
+export function StatCard({
+  label,
+  value,
+  hint,
+  tone = "default",
+}: {
+  label: string;
+  value: number | string;
+  hint?: string;
+  tone?: "default" | "accent" | "warning";
+}) {
+  return (
+    <Card className="relative overflow-hidden">
+      <div
+        className={cn(
+          "absolute inset-x-0 top-0 h-0.5",
+          tone === "accent" && "bg-[#CFFF1A]",
+          tone === "warning" && "bg-amber-400",
+          tone === "default" && "bg-white/15"
+        )}
+      />
+      <p className="text-xs font-bold tracking-wide text-gray-400">{label}</p>
+      <p className="mt-2 text-3xl font-black tracking-tight text-white">{value}</p>
+      {hint ? <p className="mt-2 text-xs leading-relaxed text-gray-500">{hint}</p> : null}
+    </Card>
+  );
+}
+
+export function QuickLinkCard({
+  href,
+  title,
+  description,
+  action = "前往查看",
+}: {
+  href: string;
+  title: string;
+  description: string;
+  action?: string;
+}) {
+  return (
+    <Link href={href} className="group block h-full">
+      <Card className="flex h-full min-h-40 flex-col transition duration-200 group-hover:-translate-y-0.5 group-hover:border-[#CFFF1A]/40 group-focus-visible:border-[#CFFF1A]">
+        <h3 className="font-black text-white">{title}</h3>
+        <p className="mt-2 flex-1 text-sm leading-relaxed text-gray-400">{description}</p>
+        <p className="mt-5 text-sm font-black text-[#CFFF1A]">{action} →</p>
+      </Card>
+    </Link>
   );
 }

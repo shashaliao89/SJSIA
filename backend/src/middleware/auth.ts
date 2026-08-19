@@ -52,5 +52,11 @@ export function requireApproved(req: Request, res: Response, next: NextFunction)
   if (req.user.status !== "approved") {
     return res.status(403).json({ error: "帳號待審核或已停用" });
   }
+  if (
+    req.user.membership_expires_at &&
+    new Date(req.user.membership_expires_at) <= new Date()
+  ) {
+    return res.status(403).json({ error: "會員資格已到期，請聯繫協會續約" });
+  }
   next();
 }

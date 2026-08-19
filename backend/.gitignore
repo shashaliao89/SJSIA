@@ -3,3 +3,6 @@ node_modules
 .env
 .env.local
 dist
+
+# Private member imports contain admin-only pricing/status data.
+src/data/member-kols.json

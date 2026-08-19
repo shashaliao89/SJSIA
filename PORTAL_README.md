@@ -28,6 +28,7 @@ cp .env.example .env
 npm install
 npm run db:migrate
 npm run db:seed
+npm run db:import-members
 npm run dev
 ```
 
@@ -73,3 +74,9 @@ npm run dev
 | Admin | `/dashboard/admin` |
 
 Schema：`backend/src/db/schema.sql`
+
+## 會員名單匯入
+
+本機私密檔 `backend/src/data/member-kols.json` 是從 Google 試算表「會員名單_整理」整理出的 KOL 快照，已被 `.gitignore` 排除，避免把管理員限定報價提交到 GitHub。
+執行 `npm run db:import-members` 可安全重複匯入；相同 `source_ref` 會更新，不會重複新增。
+正式 Railway 資料庫請在安全環境中設定 Railway `DATABASE_URL` 後執行一次此命令，不要把私密 JSON 加入 Git。

@@ -11,10 +11,14 @@ const kolSchema = z.object({
   youtube_url: z.string().optional().nullable(),
   tiktok_url: z.string().optional().nullable(),
   follower_count: z.number().int().optional(),
+  follower_count_raw: z.string().optional().nullable(),
   audience_profile: z.string().optional().nullable(),
   content_types: z.array(z.string()).optional(),
   collaboration_types: z.array(z.string()).optional(),
   collaboration_price: z.string().optional().nullable(),
+  boarding_status: z.string().optional().nullable(),
+  membership_tag: z.string().optional().nullable(),
+  data_check: z.string().optional().nullable(),
   past_cases: z.string().optional().nullable(),
   open_to_contact: z.boolean().optional(),
   is_public: z.boolean().optional(),
@@ -23,12 +27,31 @@ const kolSchema = z.object({
 
 router.get("/", requireAuth, requireApproved, async (req, res) => {
   if (req.user!.role === "admin") {
-    const result = await pool.query(`SELECT * FROM kol_profiles ORDER BY created_at DESC`);
+    const result = await pool.query(
+      `SELECT *,
+        CASE
+          WHEN follower_count < 10000 THEN 'under_10k'
+          WHEN follower_count < 100000 THEN '10k_to_100k'
+          ELSE 'over_100k'
+        END AS follower_tier
+       FROM kol_profiles
+       ORDER BY follower_count DESC NULLS LAST, name ASC`
+    );
     return res.json({ kols: result.rows });
   }
   if (req.user!.role === "brand") {
     const result = await pool.query(
-      `SELECT * FROM kol_profiles WHERE is_public = true ORDER BY follower_count DESC NULLS LAST`
+      `SELECT id, name, ig_url, youtube_url, tiktok_url, follower_count,
+        audience_profile, content_types, collaboration_types, past_cases,
+        open_to_contact, is_public,
+        CASE
+          WHEN follower_count < 10000 THEN 'under_10k'
+          WHEN follower_count < 100000 THEN '10k_to_100k'
+          ELSE 'over_100k'
+        END AS follower_tier
+       FROM kol_profiles
+       WHERE is_public = true AND ig_url ~* '^https?://'
+       ORDER BY follower_count DESC NULLS LAST, name ASC`
     );
     return res.json({ kols: result.rows });
   }
@@ -89,8 +112,9 @@ router.post("/", requireAuth, requireRole("admin"), async (req, res) => {
     `INSERT INTO kol_profiles (
       user_id, name, ig_url, youtube_url, tiktok_url, follower_count,
       audience_profile, content_types, collaboration_types, collaboration_price,
-      past_cases, open_to_contact, is_public
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+      past_cases, open_to_contact, is_public, follower_count_raw,
+      boarding_status, membership_tag, data_check
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) RETURNING *`,
     [
       d.user_id ?? null,
       d.name,
@@ -105,6 +129,10 @@ router.post("/", requireAuth, requireRole("admin"), async (req, res) => {
       d.past_cases ?? null,
       d.open_to_contact ?? true,
       d.is_public ?? true,
+      d.follower_count_raw ?? null,
+      d.boarding_status ?? null,
+      d.membership_tag ?? null,
+      d.data_check ?? null,
     ]
   );
   res.status(201).json({ kol: result.rows[0] });
@@ -127,6 +155,10 @@ router.put("/:id", requireAuth, requireRole("admin"), async (req, res) => {
       past_cases = $11,
       open_to_contact = COALESCE($12, open_to_contact),
       is_public = COALESCE($13, is_public),
+      follower_count_raw = $14,
+      boarding_status = $15,
+      membership_tag = $16,
+      data_check = $17,
       updated_at = NOW()
      WHERE id = $1 RETURNING *`,
     [
@@ -143,6 +175,10 @@ router.put("/:id", requireAuth, requireRole("admin"), async (req, res) => {
       d.past_cases ?? null,
       d.open_to_contact,
       d.is_public,
+      d.follower_count_raw ?? null,
+      d.boarding_status ?? null,
+      d.membership_tag ?? null,
+      d.data_check ?? null,
     ]
   );
   if (result.rows.length === 0) {

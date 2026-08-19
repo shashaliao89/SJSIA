@@ -18,14 +18,21 @@ export interface KolProfile {
   youtube_url: string | null;
   tiktok_url: string | null;
   follower_count: number;
+  follower_count_raw?: string | null;
+  follower_tier?: FollowerTier;
   audience_profile: string | null;
   content_types: string[];
   collaboration_types: string[];
   collaboration_price: string | null;
+  boarding_status?: string | null;
+  membership_tag?: string | null;
+  data_check?: string | null;
   past_cases: string | null;
   open_to_contact: boolean;
   is_public: boolean;
 }
+
+export type FollowerTier = "under_10k" | "10k_to_100k" | "over_100k";
 
 export interface Campaign {
   id: string;

@@ -60,7 +60,12 @@ CREATE TABLE IF NOT EXISTS kol_profiles (
   audience_profile TEXT,
   content_types TEXT[] DEFAULT '{}',
   collaboration_types TEXT[] DEFAULT '{}',
-  collaboration_price VARCHAR(255),
+  collaboration_price TEXT,
+  follower_count_raw VARCHAR(50),
+  boarding_status VARCHAR(100),
+  membership_tag VARCHAR(50),
+  data_check VARCHAR(100),
+  source_ref VARCHAR(255),
   past_cases TEXT,
   open_to_contact BOOLEAN NOT NULL DEFAULT true,
   is_public BOOLEAN NOT NULL DEFAULT true,
@@ -151,7 +156,18 @@ CREATE TABLE IF NOT EXISTS event_registrations (
 
 CREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status);
 CREATE INDEX IF NOT EXISTS idx_kol_profiles_public ON kol_profiles(is_public);
+CREATE INDEX IF NOT EXISTS idx_kol_profiles_follower_count ON kol_profiles(follower_count);
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+
+-- Migrate existing KOL profiles when these columns are introduced after initial setup.
+ALTER TABLE kol_profiles ALTER COLUMN collaboration_price TYPE TEXT;
+ALTER TABLE kol_profiles ADD COLUMN IF NOT EXISTS follower_count_raw VARCHAR(50);
+ALTER TABLE kol_profiles ADD COLUMN IF NOT EXISTS boarding_status VARCHAR(100);
+ALTER TABLE kol_profiles ADD COLUMN IF NOT EXISTS membership_tag VARCHAR(50);
+ALTER TABLE kol_profiles ADD COLUMN IF NOT EXISTS data_check VARCHAR(100);
+ALTER TABLE kol_profiles ADD COLUMN IF NOT EXISTS source_ref VARCHAR(255);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_kol_profiles_source_ref
+  ON kol_profiles(source_ref) WHERE source_ref IS NOT NULL;
 
 -- Migrate existing brand_profiles if columns were added later
 ALTER TABLE brand_profiles ADD COLUMN IF NOT EXISTS open_to_contact BOOLEAN NOT NULL DEFAULT true;
