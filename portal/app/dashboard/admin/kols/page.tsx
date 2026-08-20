@@ -57,7 +57,7 @@ export default function AdminKolsPage() {
       youtube_url: editing?.youtube_url ?? null,
       tiktok_url: editing?.tiktok_url ?? null,
       follower_count: Number(fd.get("follower_count") || 0),
-      follower_count_raw: fd.get("follower_count_raw") || null,
+      follower_count_raw: editing?.follower_count_raw ?? null,
       audience_profile: editing?.audience_profile ?? null,
       content_types: editing?.content_types ?? [],
       collaboration_types: editing?.collaboration_types ?? [],
@@ -113,7 +113,7 @@ export default function AdminKolsPage() {
           <form onSubmit={handleSubmit} className="space-y-4" key={editing?.id ?? "new"}>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label htmlFor="name">KOL 名稱</label>
+                <label htmlFor="name">IG 顯示名稱</label>
                 <input id="name" name="name" required defaultValue={editing?.name ?? ""} />
               </div>
               <div>
@@ -121,22 +121,13 @@ export default function AdminKolsPage() {
                 <input id="ig_url" name="ig_url" defaultValue={editing?.ig_url ?? ""} />
               </div>
               <div>
-                <label htmlFor="follower_count">粉絲數（數字）</label>
+                <label htmlFor="follower_count">粉絲數</label>
                 <input
                   id="follower_count"
                   name="follower_count"
                   type="number"
                   min="0"
                   defaultValue={editing?.follower_count ?? 0}
-                />
-              </div>
-              <div>
-                <label htmlFor="follower_count_raw">原始粉絲數文字</label>
-                <input
-                  id="follower_count_raw"
-                  name="follower_count_raw"
-                  placeholder="例如：3.5萬"
-                  defaultValue={editing?.follower_count_raw ?? ""}
                 />
               </div>
               <div>
@@ -264,7 +255,6 @@ export default function AdminKolsPage() {
                         <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-gray-400">
                           <span>
                             IG 粉絲：<strong className="text-white">{formatFollowers(kol.follower_count)}</strong>
-                            {kol.follower_count_raw ? `（原始：${kol.follower_count_raw}）` : ""}
                           </span>
                           {kol.ig_url ? (
                             <a href={kol.ig_url} target="_blank" rel="noreferrer" className="font-bold text-[#CFFF1A] hover:underline">
