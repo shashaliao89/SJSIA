@@ -73,6 +73,27 @@ CREATE TABLE IF NOT EXISTS kol_profiles (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS imported_members (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  source_ref VARCHAR(255) UNIQUE NOT NULL,
+  source_row INTEGER NOT NULL,
+  member_type user_role NOT NULL,
+  display_name VARCHAR(255) NOT NULL,
+  email VARCHAR(255),
+  line_id VARCHAR(255),
+  representative_name VARCHAR(255),
+  instagram_url VARCHAR(500),
+  website_url VARCHAR(500),
+  follower_count INTEGER DEFAULT 0,
+  collaboration_price TEXT,
+  boarding_status VARCHAR(100),
+  application_note TEXT,
+  review_status user_status NOT NULL DEFAULT 'pending',
+  synced_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS campaigns (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -174,6 +195,8 @@ ALTER TABLE brand_profiles ADD COLUMN IF NOT EXISTS open_to_contact BOOLEAN NOT 
 ALTER TABLE brand_profiles ADD COLUMN IF NOT EXISTS is_public BOOLEAN NOT NULL DEFAULT true;
 
 CREATE INDEX IF NOT EXISTS idx_brand_profiles_public ON brand_profiles(is_public);
+CREATE INDEX IF NOT EXISTS idx_imported_members_type ON imported_members(member_type);
+CREATE INDEX IF NOT EXISTS idx_imported_members_review_status ON imported_members(review_status);
 
 CREATE TABLE IF NOT EXISTS contact_requests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

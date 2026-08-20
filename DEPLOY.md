@@ -85,8 +85,10 @@ docker compose down -v     # 清除 volume（重置 DB）
 | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` 或手動貼上 |
 | `JWT_SECRET` | 長隨機字串（至少 32 字元） |
 | `CORS_ORIGIN` | Portal 正式網址，例如 `https://portal-xxx.vercel.app` |
-| `GOOGLE_SHEET_ID` | `1WPK49aS2cWfGjT56HUJHjRwKhFFrnx0bFgkBl1ZFnRA` |
-| `GOOGLE_SHEET_NAME` | `會員名單_整理` |
+| `GOOGLE_SHEET_ID` | `1AsJZqXeo_6WOC7OmeAoetLbzQV4_zzwongKvu_135Yk` |
+| `GOOGLE_FORM_RESPONSE_SHEET` | `表單回覆 1` |
+| `GOOGLE_PERSONAL_MEMBER_SHEET` | `個人會員＿AI整理` |
+| `GOOGLE_ORGANIZATION_MEMBER_SHEET` | `團體會員＿AI整理` |
 | `GOOGLE_SERVICE_ACCOUNT_EMAIL` | Google Cloud Service Account Email |
 | `GOOGLE_PRIVATE_KEY` | Google Cloud Service Account Private Key |
 | `MAIL_FROM` | `shasha.liao@stepc.co` |

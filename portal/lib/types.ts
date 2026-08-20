@@ -142,4 +142,15 @@ export interface Member {
   membership_expires_at: string | null;
   brand_name?: string;
   kol_name?: string;
+  imported?: boolean;
+  source_row?: number;
+  instagram_url?: string | null;
+  website_url?: string | null;
+  follower_count?: number;
+  collaboration_price?: string | null;
+  boarding_status?: string | null;
+  representative_name?: string | null;
+  line_id?: string | null;
+  application_note?: string | null;
+  synced_at?: string;
 }

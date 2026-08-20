@@ -62,7 +62,7 @@ export default function AdminMembersPage() {
               <div>
                 <p className="font-black">{m.brand_name ?? m.kol_name ?? m.email}</p>
                 <p className="text-sm text-gray-400">
-                  {m.email} · {m.role === "brand" ? "品牌方" : "KOL"}
+                  {m.email || "未提供 Email"} · {m.role === "brand" ? "品牌方" : "KOL"}
                 </p>
                 <div className="mt-2 flex gap-2">
                   <Badge tone={m.status === "approved" ? "success" : m.status === "pending" ? "warning" : "danger"}>
@@ -71,7 +71,16 @@ export default function AdminMembersPage() {
                   {m.membership_expires_at ? (
                     <Badge>到期 {formatDate(m.membership_expires_at)}</Badge>
                   ) : null}
+                  {m.imported ? <Badge>Google Form 第 {m.source_row} 列</Badge> : null}
+                  {m.boarding_status ? <Badge>{m.boarding_status}</Badge> : null}
                 </div>
+                {m.instagram_url ? (
+                  <a className="mt-3 inline-block text-sm font-bold text-[#CFFF1A] hover:underline" href={m.instagram_url} target="_blank" rel="noreferrer">
+                    Instagram · {(m.follower_count ?? 0).toLocaleString()} 粉絲
+                  </a>
+                ) : null}
+                {m.collaboration_price ? <p className="mt-2 whitespace-pre-wrap text-sm text-gray-300">合作報價：{m.collaboration_price}</p> : null}
+                {m.representative_name ? <p className="mt-2 text-sm text-gray-300">代表人：{m.representative_name}</p> : null}
               </div>
               <div className="flex flex-wrap gap-2">
                 {m.status !== "approved" ? (

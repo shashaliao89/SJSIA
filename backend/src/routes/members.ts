@@ -8,7 +8,7 @@ const router = Router();
 router.use(requireAuth, requireRole("admin"));
 
 router.get("/", async (_req, res) => {
-  const result = await pool.query(
+  const registered = await pool.query(
     `SELECT u.id, u.email, u.role, u.status, u.membership_expires_at, u.created_at,
             bp.brand_name, kp.name AS kol_name
      FROM users u
@@ -17,7 +17,15 @@ router.get("/", async (_req, res) => {
      WHERE u.role IN ('brand', 'kol')
      ORDER BY u.created_at DESC`
   );
-  res.json({ members: result.rows });
+  const imported = await pool.query(
+    `SELECT id, email, member_type AS role, review_status AS status, NULL::timestamptz AS membership_expires_at,
+            created_at, CASE WHEN member_type = 'brand' THEN display_name END AS brand_name,
+            CASE WHEN member_type = 'kol' THEN display_name END AS kol_name,
+            true AS imported, source_row, instagram_url, website_url, follower_count,
+            collaboration_price, boarding_status, representative_name, line_id, application_note, synced_at
+     FROM imported_members ORDER BY source_row DESC`
+  );
+  res.json({ members: [...registered.rows, ...imported.rows] });
 });
 
 const updateSchema = z.object({
@@ -46,6 +54,16 @@ router.patch("/:id", async (req, res) => {
   }
   if (fields.length === 0) {
     return res.status(400).json({ error: "無更新欄位" });
+  }
+
+  if (status !== undefined) {
+    const importedResult = await pool.query(
+      `UPDATE imported_members SET review_status = $2, updated_at = NOW()
+       WHERE id = $1 RETURNING id, email, member_type AS role, review_status AS status,
+       NULL::timestamptz AS membership_expires_at`,
+      [req.params.id, status]
+    );
+    if (importedResult.rows.length) return res.json({ member: importedResult.rows[0] });
   }
 
   fields.push(`updated_at = NOW()`);
