@@ -67,6 +67,31 @@ async function readRows(auth: JWT, spreadsheetId: string) {
   return response.data.values ?? [];
 }
 
+type ExistingInstagramData = {
+  instagramUrl: string;
+  displayName: string;
+  followerCount: string;
+};
+
+async function readExistingInstagramData(auth: JWT, spreadsheetId: string) {
+  const escaped = PERSONAL_SHEET.replaceAll("'", "''");
+  const range = encodeURIComponent(`'${escaped}'!A2:I`);
+  const response = await auth.request<{ values?: Array<Array<string | number>> }>({
+    url: `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}`,
+  });
+  const data = new Map<string, ExistingInstagramData>();
+  for (const row of response.data.values ?? []) {
+    const sourceRow = String(row[0] ?? "").trim();
+    if (!sourceRow) continue;
+    data.set(sourceRow, {
+      displayName: String(row[4] ?? "").trim(),
+      instagramUrl: String(row[6] ?? "").trim(),
+      followerCount: String(row[8] ?? "").trim(),
+    });
+  }
+  return data;
+}
+
 async function replaceSheet(auth: JWT, spreadsheetId: string, sheetName: string, rows: string[][]) {
   const escaped = sheetName.replaceAll("'", "''");
   await auth.request({
@@ -84,6 +109,7 @@ async function syncMembers() {
   const spreadsheetId = requiredEnv("GOOGLE_SHEET_ID");
   const auth = authClient();
   const rows = await readRows(auth, spreadsheetId);
+  const existingInstagramData = await readExistingInstagramData(auth, spreadsheetId);
   if (rows.length < 2) throw new Error("Google Form response sheet returned no member rows");
 
   const syncedAt = new Date().toISOString();
@@ -99,10 +125,18 @@ async function syncMembers() {
       const instagram = normalizeInstagramUrl(row[8] ?? "");
       if (!submittedName && !instagram) return;
       const followerRaw = (row[14] ?? "").trim();
+      const existing = existingInstagramData.get(String(sourceRow));
+      const canPreserveEnrichment = Boolean(instagram && existing?.instagramUrl === instagram.url);
+      const displayName = canPreserveEnrichment && existing?.displayName
+        ? existing.displayName
+        : submittedName;
+      const followerCount = canPreserveEnrichment && existing?.followerCount
+        ? existing.followerCount
+        : String(parseFollowerCount(followerRaw));
       personal.push([
-        String(sourceRow), row[0] ?? "", type, submittedName, submittedName,
+        String(sourceRow), row[0] ?? "", type, submittedName, displayName,
         instagram?.handle ?? "", instagram?.url ?? "", followerRaw,
-        String(parseFollowerCount(followerRaw)), row[13] ?? "", row[10] ?? "", row[9] ?? "",
+        followerCount, row[13] ?? "", row[10] ?? "", row[9] ?? "",
         boardingStatus, row[15] ?? "", instagram ? "連結已標準化；顯示名稱待 Meta API 驗證" : "Instagram 連結待補", syncedAt,
       ]);
     } else if (type.includes("團體會員") || type.includes("企業團體會員")) {
