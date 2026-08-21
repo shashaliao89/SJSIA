@@ -119,6 +119,13 @@ export default function BrandKolsPage() {
                         IG 粉絲數：
                         <span className="font-bold text-white">{formatFollowers(kol.follower_count)}</span>
                       </p>
+                      {kol.content_types?.length ? (
+                        <div className="mt-3 flex flex-wrap gap-2" aria-label="KOL 定位標籤">
+                          {kol.content_types.slice(0, 5).map((tag) => (
+                            <Badge key={tag}>{tag}</Badge>
+                          ))}
+                        </div>
+                      ) : null}
                       <div className="mt-4 flex-1">
                         {kol.ig_url ? (
                           <a

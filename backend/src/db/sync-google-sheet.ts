@@ -11,7 +11,7 @@ const ORGANIZATION_SHEET = process.env.GOOGLE_ORGANIZATION_MEMBER_SHEET?.trim() 
 const PERSONAL_HEADERS = [
   "來源列", "時間戳記", "會員類型", "姓名", "IG 顯示名稱", "IG 帳號", "Instagram 連結",
   "粉絲數（原始）", "粉絲數", "合作報價", "Email", "Line ID", "登船狀態／方案",
-  "主要訴求", "IG 資料狀態", "最後同步時間",
+  "主要訴求", "IG 資料狀態", "最後同步時間", "KOL 定位標籤",
 ];
 const ORGANIZATION_HEADERS = [
   "來源列", "時間戳記", "會員類型", "品牌名稱", "代表人", "品牌連結", "Email", "Line ID",
@@ -71,11 +71,12 @@ type ExistingInstagramData = {
   instagramUrl: string;
   displayName: string;
   followerCount: string;
+  positioningTags: string;
 };
 
 async function readExistingInstagramData(auth: JWT, spreadsheetId: string) {
   const escaped = PERSONAL_SHEET.replaceAll("'", "''");
-  const range = encodeURIComponent(`'${escaped}'!A2:I`);
+  const range = encodeURIComponent(`'${escaped}'!A2:Q`);
   const response = await auth.request<{ values?: Array<Array<string | number>> }>({
     url: `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}`,
   });
@@ -87,6 +88,7 @@ async function readExistingInstagramData(auth: JWT, spreadsheetId: string) {
       displayName: String(row[4] ?? "").trim(),
       instagramUrl: String(row[6] ?? "").trim(),
       followerCount: String(row[8] ?? "").trim(),
+      positioningTags: String(row[16] ?? "").trim(),
     });
   }
   return data;
@@ -138,6 +140,7 @@ async function syncMembers() {
         instagram?.handle ?? "", instagram?.url ?? "", followerRaw,
         followerCount, row[13] ?? "", row[10] ?? "", row[9] ?? "",
         boardingStatus, row[15] ?? "", instagram ? "連結已標準化；顯示名稱待 Meta API 驗證" : "Instagram 連結待補", syncedAt,
+        canPreserveEnrichment ? existing?.positioningTags ?? "" : "",
       ]);
     } else if (type.includes("團體會員") || type.includes("企業團體會員")) {
       const brandName = (row[2] ?? "").trim();
@@ -160,13 +163,17 @@ async function syncMembers() {
       await client.query(
         `INSERT INTO kol_profiles (
           name, ig_url, follower_count, follower_count_raw, collaboration_price,
-          boarding_status, source_ref, data_check, open_to_contact, is_public
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,true,true)
+          boarding_status, source_ref, data_check, content_types, open_to_contact, is_public
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,true,true)
         ON CONFLICT (source_ref) WHERE source_ref IS NOT NULL DO UPDATE SET
           name=EXCLUDED.name, ig_url=EXCLUDED.ig_url, follower_count=EXCLUDED.follower_count,
           follower_count_raw=EXCLUDED.follower_count_raw, collaboration_price=EXCLUDED.collaboration_price,
-          boarding_status=EXCLUDED.boarding_status, data_check=EXCLUDED.data_check, updated_at=NOW()`,
-        [row[4], row[6] || null, Number(row[8]), row[7] || null, row[9] || null, row[12] || null, sourceRef, row[14]]
+          boarding_status=EXCLUDED.boarding_status, data_check=EXCLUDED.data_check,
+          content_types=EXCLUDED.content_types, updated_at=NOW()`,
+        [
+          row[4], row[6] || null, Number(row[8]), row[7] || null, row[9] || null,
+          row[12] || null, sourceRef, row[14], row[16] ? row[16].split("、").filter(Boolean) : [],
+        ]
       );
       await client.query(
         `INSERT INTO imported_members (source_ref, source_row, member_type, display_name, email, line_id,
