@@ -1,9 +1,40 @@
 import { Router } from "express";
 import { z } from "zod";
+import { JWT } from "google-auth-library";
 import { pool } from "../db/pool.js";
 import { requireAuth, requireRole, requireApproved } from "../middleware/auth.js";
 
 const router = Router();
+
+async function loadPositioningTagsFromSheet() {
+  const spreadsheetId = process.env.GOOGLE_SHEET_ID?.trim();
+  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim();
+  const key = process.env.GOOGLE_PRIVATE_KEY?.trim();
+  const sheetName = process.env.GOOGLE_PERSONAL_MEMBER_SHEET?.trim() || "個人會員＿AI整理";
+  if (!spreadsheetId || !email || !key) return null;
+
+  const auth = new JWT({
+    email,
+    key: key.replaceAll("\\n", "\n"),
+    scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
+  });
+  const escaped = sheetName.replaceAll("'", "''");
+  const range = encodeURIComponent(`'${escaped}'!A2:Q`);
+  const response = await auth.request<{ values?: Array<Array<string | number>> }>({
+    url: `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}`,
+  });
+  const tagsBySourceRow = new Map<string, string[]>();
+  for (const row of response.data.values ?? []) {
+    const sourceRow = String(row[0] ?? "").trim();
+    const tags = String(row[16] ?? "")
+      .split("、")
+      .map((tag) => tag.trim())
+      .filter(Boolean)
+      .slice(0, 5);
+    if (sourceRow && tags.length) tagsBySourceRow.set(sourceRow, tags);
+  }
+  return tagsBySourceRow;
+}
 
 const kolSchema = z.object({
   name: z.string().min(1),
@@ -37,6 +68,19 @@ router.get("/", requireAuth, requireApproved, async (req, res) => {
        FROM kol_profiles
        ORDER BY follower_count DESC NULLS LAST, name ASC`
     );
+    try {
+      const tagsBySourceRow = await loadPositioningTagsFromSheet();
+      if (tagsBySourceRow) {
+        for (const kol of result.rows) {
+          const sourceRow = String(kol.source_ref ?? "").match(/:row:(\d+)$/)?.[1];
+          if (sourceRow && tagsBySourceRow.has(sourceRow)) {
+            kol.content_types = tagsBySourceRow.get(sourceRow);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load live KOL positioning tags:", error);
+    }
     return res.json({ kols: result.rows });
   }
   if (req.user!.role === "brand") {
