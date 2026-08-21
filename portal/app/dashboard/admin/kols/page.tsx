@@ -16,7 +16,7 @@ import {
 import { ADMIN_NAV } from "@/lib/nav";
 
 function boardingTone(status?: string | null) {
-  if (status?.startsWith("方案")) return "success";
+  if (status?.includes("方案")) return "success";
   if (status === "資格不合") return "danger";
   if (status === "無法") return "warning";
   return "default";
@@ -28,12 +28,26 @@ export default function AdminKolsPage() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedTier, setSelectedTier] = useState<FollowerTier | "all">("all");
-  const filteredKols = useMemo(
+  const [selectedBoardingStatus, setSelectedBoardingStatus] = useState("all");
+  const boardingStatuses = useMemo(
     () =>
-      selectedTier === "all"
-        ? kols
-        : kols.filter((kol) => (kol.follower_tier ?? followerTier(kol.follower_count ?? 0)) === selectedTier),
-    [kols, selectedTier]
+      Array.from(new Set(kols.map((kol) => kol.boarding_status?.trim()).filter((status): status is string => Boolean(status))))
+        .sort((a, b) => a.localeCompare(b, "zh-Hant")),
+    [kols]
+  );
+  const filteredKols = useMemo(
+    () => kols.filter((kol) => {
+      const matchesTier =
+        selectedTier === "all" ||
+        (kol.follower_tier ?? followerTier(kol.follower_count ?? 0)) === selectedTier;
+      const matchesBoardingStatus =
+        selectedBoardingStatus === "all" ||
+        (selectedBoardingStatus === "unlabeled"
+          ? !kol.boarding_status?.trim()
+          : kol.boarding_status?.trim() === selectedBoardingStatus);
+      return matchesTier && matchesBoardingStatus;
+    }),
+    [kols, selectedTier, selectedBoardingStatus]
   );
 
   async function load() {
@@ -64,7 +78,7 @@ export default function AdminKolsPage() {
       collaboration_price: fd.get("collaboration_price") || null,
       boarding_status: fd.get("boarding_status") || null,
       membership_tag: fd.get("membership_tag") || null,
-      data_check: fd.get("data_check") || null,
+      data_check: editing?.data_check ?? null,
       past_cases: editing?.past_cases ?? null,
       open_to_contact: fd.get("open_to_contact") === "on",
       is_public: fd.get("is_public") === "on",
@@ -158,10 +172,6 @@ export default function AdminKolsPage() {
                 defaultValue={editing?.collaboration_price ?? ""}
               />
             </div>
-            <div>
-              <label htmlFor="data_check">資料檢查</label>
-              <input id="data_check" name="data_check" defaultValue={editing?.data_check ?? ""} />
-            </div>
             <div className="flex flex-wrap gap-5">
               <label className="flex items-center gap-2 text-sm text-gray-300">
                 <input type="checkbox" name="is_public" className="w-auto" defaultChecked={editing?.is_public ?? true} />
@@ -232,6 +242,48 @@ export default function AdminKolsPage() {
                 );
               })}
             </div>
+            <div className="my-4 border-t border-white/10" />
+            <p className="mb-3 px-1 text-xs font-black tracking-wide text-gray-500">合作狀態</p>
+            <div className="flex flex-wrap gap-2" role="group" aria-label="依合作狀態篩選 KOL">
+              <button
+                type="button"
+                onClick={() => setSelectedBoardingStatus("all")}
+                className={`rounded-xl px-4 py-2.5 text-sm font-black transition-colors ${
+                  selectedBoardingStatus === "all"
+                    ? "bg-[#CFFF1A] text-black"
+                    : "border border-white/10 text-gray-300 hover:bg-white/5"
+                }`}
+              >
+                全部 <span className="ml-1 opacity-60">{kols.length}</span>
+              </button>
+              {boardingStatuses.map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() => setSelectedBoardingStatus(status)}
+                  className={`rounded-xl px-4 py-2.5 text-sm font-black transition-colors ${
+                    selectedBoardingStatus === status
+                      ? "bg-[#CFFF1A] text-black"
+                      : "border border-white/10 text-gray-300 hover:bg-white/5"
+                  }`}
+                >
+                  {status} <span className="ml-1 opacity-60">{kols.filter((kol) => kol.boarding_status?.trim() === status).length}</span>
+                </button>
+              ))}
+              {kols.some((kol) => !kol.boarding_status?.trim()) ? (
+                <button
+                  type="button"
+                  onClick={() => setSelectedBoardingStatus("unlabeled")}
+                  className={`rounded-xl px-4 py-2.5 text-sm font-black transition-colors ${
+                    selectedBoardingStatus === "unlabeled"
+                      ? "bg-[#CFFF1A] text-black"
+                      : "border border-white/10 text-gray-300 hover:bg-white/5"
+                  }`}
+                >
+                  未標註 <span className="ml-1 opacity-60">{kols.filter((kol) => !kol.boarding_status?.trim()).length}</span>
+                </button>
+              ) : null}
+            </div>
           </div>
 
           {filteredKols.length === 0 ? (
@@ -270,9 +322,18 @@ export default function AdminKolsPage() {
                             {kol.collaboration_price || "尚未提供報價"}
                           </p>
                         </div>
-                        {kol.data_check && kol.data_check !== "完整" ? (
-                          <p className="mt-3 text-xs font-bold text-yellow-300">資料檢查：{kol.data_check}</p>
-                        ) : null}
+                        <div className="mt-4">
+                          <p className="mb-2 text-xs font-black tracking-wide text-gray-500">KOL 定位標籤</p>
+                          {kol.content_types?.length ? (
+                            <div className="flex flex-wrap gap-2">
+                              {kol.content_types.slice(0, 5).map((tag) => (
+                                <Badge key={tag}>{tag}</Badge>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-500">尚未建立定位標籤</p>
+                          )}
+                        </div>
                       </div>
                       <Button variant="secondary" onClick={() => openEditor(kol)}>
                         編輯
