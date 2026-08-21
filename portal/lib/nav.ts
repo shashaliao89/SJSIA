@@ -16,11 +16,10 @@ export const KOL_NAV = [
 
 export const ADMIN_NAV = [
   { href: "/dashboard/admin", label: "總覽" },
-  { href: "/dashboard/admin/notifications", label: "媒合通知" },
-  { href: "/dashboard/admin/members", label: "會員管理" },
   { href: "/dashboard/admin/kols", label: "KOL 管理" },
-  { href: "/dashboard/admin/campaigns", label: "品牌案件管理" },
+  { href: "/dashboard/admin/campaigns", label: "品牌管理" },
   { href: "/dashboard/admin/events", label: "活動管理" },
+  { href: "/dashboard/admin/notifications", label: "媒合通知" },
 ];
 
 export function formatDate(value: string | null | undefined) {

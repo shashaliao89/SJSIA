@@ -1,153 +1,125 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ApiError, api, STATUS_LABELS } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import type { Campaign } from "@/lib/types";
+import type { Member } from "@/lib/types";
 import { DashboardShell, PageHeader, Card, Button, Badge, EmptyState } from "@/components/DashboardShell";
 import { ADMIN_NAV, formatDate } from "@/lib/nav";
 
-export default function AdminCampaignsPage() {
+export default function AdminBrandsPage() {
   const { token } = useAuth();
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [editing, setEditing] = useState<Campaign | null>(null);
-  const [showForm, setShowForm] = useState(false);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "suspended">("all");
+  const [loading, setLoading] = useState(true);
 
   async function load() {
-    const data = await api<{ campaigns: Campaign[] }>("/api/campaigns", { token });
-    setCampaigns(data.campaigns);
+    const data = await api<{ members: Member[] }>("/api/members", { token });
+    setMembers(data.members.filter((member) => member.role === "brand"));
   }
 
   useEffect(() => {
-    load().catch(() => setCampaigns([]));
+    load()
+      .catch(() => setMembers([]))
+      .finally(() => setLoading(false));
   }, [token]);
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!editing) return;
-    const fd = new FormData(e.currentTarget);
+  async function updateStatus(id: string, status: "pending" | "approved" | "suspended") {
     try {
-      await api(`/api/campaigns/${editing.id}`, {
-        method: "PUT",
+      await api(`/api/members/${id}`, {
+        method: "PATCH",
         token,
-        body: JSON.stringify({
-          title: fd.get("title"),
-          brand_name: fd.get("brand_name"),
-          product_service_intro: fd.get("product_service_intro"),
-          budget: fd.get("budget"),
-          content_description: fd.get("content_description"),
-          reward_description: fd.get("reward_description"),
-          application_deadline: fd.get("application_deadline") || null,
-          status: fd.get("status"),
-        }),
+        body: JSON.stringify({ status }),
       });
-      setShowForm(false);
-      setEditing(null);
       await load();
     } catch (err) {
       alert(err instanceof ApiError ? err.message : "更新失敗");
     }
   }
 
-  async function quickApprove(id: string) {
-    const c = campaigns.find((x) => x.id === id);
-    if (!c) return;
-    await api(`/api/campaigns/${id}`, {
-      method: "PUT",
-      token,
-      body: JSON.stringify({ ...c, status: "approved" }),
-    });
-    await load();
-  }
+  const filtered = useMemo(
+    () => members.filter((member) => statusFilter === "all" || member.status === statusFilter),
+    [members, statusFilter]
+  );
 
   return (
-    <DashboardShell role="admin" title="Admin Dashboard" nav={ADMIN_NAV}>
-      <PageHeader title="品牌案件管理" description="審核品牌合作需求、編輯內容與狀態。" />
-      {campaigns.length === 0 ? (
-        <EmptyState message="尚無合作案件" />
+    <DashboardShell role="admin" title="協會管理後台" nav={ADMIN_NAV}>
+      <PageHeader title="品牌管理" description="查看協會團體會員資料，管理品牌審核與會員狀態。" />
+
+      <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+        <p className="mb-3 px-1 text-xs font-black tracking-wide text-gray-500">會員狀態</p>
+        <div className="flex flex-wrap gap-2" role="group" aria-label="依會員狀態篩選品牌">
+          {(["all", "pending", "approved", "suspended"] as const).map((status) => {
+            const count = status === "all" ? members.length : members.filter((member) => member.status === status).length;
+            return (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setStatusFilter(status)}
+                className={`rounded-xl px-4 py-2.5 text-sm font-black transition-colors ${
+                  statusFilter === status
+                    ? "bg-[#CFFF1A] text-black"
+                    : "border border-white/10 text-gray-300 hover:bg-white/5"
+                }`}
+              >
+                {status === "all" ? "全部" : STATUS_LABELS[status] ?? status}
+                <span className="ml-1 opacity-60">{count}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {loading ? (
+        <EmptyState message="載入中…" />
+      ) : filtered.length === 0 ? (
+        <EmptyState message="目前沒有符合條件的品牌會員" />
       ) : (
         <div className="space-y-4">
-          {campaigns.map((c) => (
-            <Card key={c.id}>
-              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div>
-                  <h3 className="font-black">{c.title}</h3>
-                  <p className="text-sm text-[#CFFF1A]">{c.brand_name}</p>
-                  <p className="mt-2 text-sm text-gray-300">{c.content_description}</p>
-                  <Badge tone={c.status === "approved" ? "success" : c.status === "pending_review" ? "warning" : "default"} className="mt-3">
-                    {STATUS_LABELS[c.status] ?? c.status}
-                  </Badge>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {c.status === "pending_review" ? (
-                    <Button onClick={() => quickApprove(c.id)}>核准上架</Button>
+          {filtered.map((member) => (
+            <Card key={member.id}>
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-lg font-black">{member.brand_name ?? member.email ?? "未命名品牌"}</h3>
+                    <Badge tone={member.status === "approved" ? "success" : member.status === "pending" ? "warning" : "danger"}>
+                      {STATUS_LABELS[member.status] ?? member.status}
+                    </Badge>
+                    {member.imported ? <Badge>Google Form 第 {member.source_row} 列</Badge> : <Badge>後台註冊</Badge>}
+                    {member.boarding_status ? <Badge>{member.boarding_status}</Badge> : null}
+                  </div>
+                  <div className="mt-3 grid gap-2 text-sm text-gray-400 sm:grid-cols-2">
+                    <p>代表人：<span className="text-gray-200">{member.representative_name || "未提供"}</span></p>
+                    <p>Email：<span className="text-gray-200">{member.email || "未提供"}</span></p>
+                    <p>Line ID：<span className="text-gray-200">{member.line_id || "未提供"}</span></p>
+                    <p>會員期限：<span className="text-gray-200">{member.membership_expires_at ? formatDate(member.membership_expires_at) : "未設定"}</span></p>
+                  </div>
+                  {member.website_url ? (
+                    <a href={member.website_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex text-sm font-bold text-[#CFFF1A] hover:underline">
+                      查看品牌連結 ↗
+                    </a>
                   ) : null}
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      setEditing(c);
-                      setShowForm(true);
-                    }}
-                  >
-                    編輯
-                  </Button>
+                  {member.application_note ? (
+                    <p className="mt-4 rounded-xl border border-white/10 bg-black/20 p-4 text-sm leading-relaxed text-gray-300">
+                      {member.application_note}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="flex shrink-0 flex-wrap gap-2">
+                  {member.status !== "approved" ? (
+                    <Button onClick={() => updateStatus(member.id, "approved")}>通過</Button>
+                  ) : null}
+                  {member.status !== "suspended" ? (
+                    <Button variant="danger" onClick={() => updateStatus(member.id, "suspended")}>停用</Button>
+                  ) : (
+                    <Button variant="secondary" onClick={() => updateStatus(member.id, "pending")}>恢復待審</Button>
+                  )}
                 </div>
               </div>
             </Card>
           ))}
         </div>
       )}
-
-      {showForm && editing ? (
-        <Card className="mt-8">
-          <h3 className="mb-4 font-black">編輯案件</h3>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="title">合作主題</label>
-              <input id="title" name="title" required defaultValue={editing.title} />
-            </div>
-            <div>
-              <label htmlFor="brand_name">品牌名稱</label>
-              <input id="brand_name" name="brand_name" required defaultValue={editing.brand_name} />
-            </div>
-            <div>
-              <label htmlFor="product_service_intro">產品介紹</label>
-              <textarea id="product_service_intro" name="product_service_intro" rows={2} defaultValue={editing.product_service_intro} required />
-            </div>
-            <div>
-              <label htmlFor="budget">預算</label>
-              <input id="budget" name="budget" defaultValue={editing.budget ?? ""} />
-            </div>
-            <div>
-              <label htmlFor="content_description">合作內容</label>
-              <textarea id="content_description" name="content_description" rows={3} defaultValue={editing.content_description} required />
-            </div>
-            <div>
-              <label htmlFor="reward_description">報酬說明</label>
-              <textarea id="reward_description" name="reward_description" rows={2} defaultValue={editing.reward_description ?? ""} />
-            </div>
-            <div>
-              <label htmlFor="application_deadline">截止日期</label>
-              <input id="application_deadline" name="application_deadline" type="date" defaultValue={editing.application_deadline?.slice(0, 10) ?? ""} />
-            </div>
-            <div>
-              <label htmlFor="status">狀態</label>
-              <select id="status" name="status" defaultValue={editing.status}>
-                <option value="pending_review">待協會審核</option>
-                <option value="approved">已通過</option>
-                <option value="rejected">已拒絕</option>
-                <option value="closed">已結束</option>
-              </select>
-            </div>
-            <div className="flex gap-2">
-              <Button type="submit">儲存</Button>
-              <Button variant="secondary" type="button" onClick={() => { setShowForm(false); setEditing(null); }}>
-                取消
-              </Button>
-            </div>
-          </form>
-        </Card>
-      ) : null}
     </DashboardShell>
   );
 }
