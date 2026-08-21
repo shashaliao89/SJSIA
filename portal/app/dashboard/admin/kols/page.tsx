@@ -36,17 +36,24 @@ export default function AdminKolsPage() {
     [kols]
   );
   const filteredKols = useMemo(
-    () => kols.filter((kol) => {
-      const matchesTier =
-        selectedTier === "all" ||
-        (kol.follower_tier ?? followerTier(kol.follower_count ?? 0)) === selectedTier;
-      const matchesBoardingStatus =
-        selectedBoardingStatus === "all" ||
-        (selectedBoardingStatus === "unlabeled"
-          ? !kol.boarding_status?.trim()
-          : kol.boarding_status?.trim() === selectedBoardingStatus);
-      return matchesTier && matchesBoardingStatus;
-    }),
+    () =>
+      kols
+        .filter((kol) => {
+          const matchesTier =
+            selectedTier === "all" ||
+            (kol.follower_tier ?? followerTier(kol.follower_count ?? 0)) === selectedTier;
+          const matchesBoardingStatus =
+            selectedBoardingStatus === "all" ||
+            (selectedBoardingStatus === "unlabeled"
+              ? !kol.boarding_status?.trim()
+              : kol.boarding_status?.trim() === selectedBoardingStatus);
+          return matchesTier && matchesBoardingStatus;
+        })
+        .sort(
+          (a, b) =>
+            (b.follower_count ?? 0) - (a.follower_count ?? 0) ||
+            a.name.localeCompare(b.name, "zh-Hant")
+        ),
     [kols, selectedTier, selectedBoardingStatus]
   );
 

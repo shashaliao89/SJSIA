@@ -52,7 +52,7 @@ export default function AdminDashboardPage() {
       <div className="mt-8">
         <h3 className="mb-4 text-lg font-black">管理功能</h3>
         <div className="grid gap-4 md:grid-cols-2">
-          <QuickLinkCard href="/dashboard/admin/kols" title="KOL 管理" description="管理 KOL 的 IG、粉絲數、定位標籤、合作報價與登船狀態。" action={`${summary.kols} 位 KOL`} />
+          <QuickLinkCard href="/dashboard/admin/kols" title="KOL管理" description="管理 KOL 的 IG、粉絲數、定位標籤、合作報價與登船狀態。" action={`${summary.kols} 位 KOL`} />
           <QuickLinkCard href="/dashboard/admin/campaigns" title="品牌管理" description="查看與審核團體會員，管理品牌資料與會員狀態。" action={`${summary.brands} 個品牌`} />
           <QuickLinkCard href="/dashboard/admin/events" title="活動管理" description="新增每月活動、查看報名名單並管理出席紀錄。" />
           <QuickLinkCard href="/dashboard/admin/notifications" title="媒合通知" description="處理品牌與 KOL 聯繫需求及合作申請。" action={unread ? `${unread} 件待處理` : "目前無待辦"} />

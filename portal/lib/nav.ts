@@ -16,7 +16,7 @@ export const KOL_NAV = [
 
 export const ADMIN_NAV = [
   { href: "/dashboard/admin", label: "總覽" },
-  { href: "/dashboard/admin/kols", label: "KOL 管理" },
+  { href: "/dashboard/admin/kols", label: "KOL管理" },
   { href: "/dashboard/admin/campaigns", label: "品牌管理" },
   { href: "/dashboard/admin/events", label: "活動管理" },
   { href: "/dashboard/admin/notifications", label: "媒合通知" },
