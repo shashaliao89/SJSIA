@@ -1,12 +1,17 @@
 import dotenv from "dotenv";
 import { JWT } from "google-auth-library";
 import { pool } from "./pool.js";
+import {
+  GOOGLE_FORM_RESPONSE_SHEET,
+  GOOGLE_ORGANIZATION_MEMBER_SHEET,
+  GOOGLE_PERSONAL_MEMBER_SHEET,
+} from "../lib/google-sheet-names.js";
 
 dotenv.config();
 
-const SOURCE_SHEET = process.env.GOOGLE_FORM_RESPONSE_SHEET?.trim() || "表單回覆 1";
-const PERSONAL_SHEET = process.env.GOOGLE_PERSONAL_MEMBER_SHEET?.trim() || "個人會員＿AI整理";
-const ORGANIZATION_SHEET = process.env.GOOGLE_ORGANIZATION_MEMBER_SHEET?.trim() || "團體會員＿AI整理";
+const SOURCE_SHEET = GOOGLE_FORM_RESPONSE_SHEET;
+const PERSONAL_SHEET = GOOGLE_PERSONAL_MEMBER_SHEET;
+const ORGANIZATION_SHEET = GOOGLE_ORGANIZATION_MEMBER_SHEET;
 
 const PERSONAL_HEADERS = [
   "來源列", "時間戳記", "會員類型", "姓名", "IG 顯示名稱", "IG 帳號", "Instagram 連結",

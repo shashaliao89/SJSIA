@@ -3,6 +3,7 @@ import { z } from "zod";
 import { JWT } from "google-auth-library";
 import { pool } from "../db/pool.js";
 import { requireAuth, requireRole, requireApproved } from "../middleware/auth.js";
+import { GOOGLE_PERSONAL_MEMBER_SHEET } from "../lib/google-sheet-names.js";
 
 const router = Router();
 
@@ -10,7 +11,7 @@ async function loadPositioningTagsFromSheet() {
   const spreadsheetId = process.env.GOOGLE_SHEET_ID?.trim();
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim();
   const key = process.env.GOOGLE_PRIVATE_KEY?.trim();
-  const sheetName = process.env.GOOGLE_PERSONAL_MEMBER_SHEET?.trim() || "個人會員＿AI整理";
+  const sheetName = GOOGLE_PERSONAL_MEMBER_SHEET;
   if (!spreadsheetId || !email || !key) return null;
 
   const auth = new JWT({
