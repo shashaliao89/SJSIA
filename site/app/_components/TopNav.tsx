@@ -103,9 +103,10 @@ export function TopNav() {
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <a
               href={PORTAL_LOGIN_URL}
-              className="hidden md:inline-flex rounded-full border border-white/20 px-4 py-2 text-sm font-bold text-white hover:border-[#CFFF1A]/50 hover:text-[#CFFF1A] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#CFFF1A]"
+              aria-label="登入協會會員後台"
+              className="hidden md:inline-flex rounded-full border border-[#CFFF1A]/55 bg-[#CFFF1A]/10 px-4 py-2 text-sm font-black text-[#CFFF1A] transition-colors hover:border-[#CFFF1A] hover:bg-[#CFFF1A] hover:text-[#0A0A0A] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#CFFF1A]"
             >
-              會員後台
+              會員登入
             </a>
             <a
               href={FORM_URL}
