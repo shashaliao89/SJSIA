@@ -13,3 +13,7 @@ export const GOOGLE_ORGANIZATION_MEMBER_SHEET = (() => {
   const configured = process.env.GOOGLE_ORGANIZATION_MEMBER_SHEET?.trim();
   return !configured || configured === LEGACY_ORGANIZATION_SHEET ? "團體會員＿整理" : configured;
 })();
+
+export function googleFormSourceRef(spreadsheetId: string, timestamp: string) {
+  return `google-form:${spreadsheetId}:timestamp:${timestamp}`;
+}

@@ -5,6 +5,7 @@ import {
   GOOGLE_FORM_RESPONSE_SHEET,
   GOOGLE_ORGANIZATION_MEMBER_SHEET,
   GOOGLE_PERSONAL_MEMBER_SHEET,
+  googleFormSourceRef,
 } from "../lib/google-sheet-names.js";
 
 dotenv.config();
@@ -91,8 +92,10 @@ async function readRows(auth: JWT, spreadsheetId: string) {
 }
 
 type ExistingInstagramData = {
+  timestamp: string;
   instagramUrl: string;
   displayName: string;
+  followerCountRaw: string;
   followerCount: string;
   positioningTags: string;
 };
@@ -103,21 +106,69 @@ async function readExistingInstagramData(auth: JWT, spreadsheetId: string) {
   const response = await auth.request<{ values?: Array<Array<string | number>> }>({
     url: `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}`,
   });
-  const bySourceRow = new Map<string, ExistingInstagramData>();
-  const byInstagramUrl = new Map<string, ExistingInstagramData>();
+  const byTimestamp = new Map<string, ExistingInstagramData>();
   for (const row of response.data.values ?? []) {
-    const sourceRow = String(row[0] ?? "").trim();
-    if (!sourceRow) continue;
+    const timestamp = String(row[1] ?? "").trim();
+    if (!timestamp) continue;
     const existing = {
+      timestamp,
       displayName: String(row[4] ?? "").trim(),
       instagramUrl: String(row[6] ?? "").trim(),
+      followerCountRaw: String(row[7] ?? "").trim(),
       followerCount: String(row[8] ?? "").trim(),
       positioningTags: String(row[16] ?? "").trim(),
     };
-    bySourceRow.set(sourceRow, existing);
-    if (existing.instagramUrl) byInstagramUrl.set(existing.instagramUrl, existing);
+    byTimestamp.set(timestamp, existing);
   }
-  return { bySourceRow, byInstagramUrl };
+  return byTimestamp;
+}
+
+function decodeHtml(value: string) {
+  return value
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16)))
+    .replace(/&#([0-9]+);/g, (_, dec) => String.fromCodePoint(Number(dec)))
+    .replaceAll("&amp;", "&").replaceAll("&quot;", '"').replaceAll("&#39;", "'");
+}
+
+function metaContent(html: string, property: string) {
+  const tags = html.match(/<meta\b[^>]*>/gi) ?? [];
+  for (const tag of tags) {
+    if (!new RegExp(`(?:property|name)=["']${property.replace(":", "\\:")}["']`, "i").test(tag)) continue;
+    const content = tag.match(/content=["']([^"']*)["']/i)?.[1];
+    if (content) return decodeHtml(content.trim());
+  }
+  return null;
+}
+
+async function enrichPublicInstagram(url: string) {
+  try {
+    const response = await fetch(url, {
+      redirect: "follow",
+      headers: {
+        "user-agent": "Mozilla/5.0 (compatible; SJSIA-Member-Enrichment/1.0)",
+        "accept-language": "en-US,en;q=0.9",
+      },
+    });
+    if (!response.ok) return null;
+    const html = await response.text();
+    const title = metaContent(html, "og:title");
+    const description = metaContent(html, "og:description");
+    const displayName = title?.replace(/\s*\(@[^)]+\)\s*•\s*Instagram.*$/i, "").trim();
+    const followerMatch = description?.match(/([\d,.]+)\s*([KMB]?)\s+Followers\b/i)
+      ?? description?.match(/([\d,.]+)\s*(萬)?\s*位?粉絲/i);
+    if (!displayName || !followerMatch) return null;
+    let followerCount = Number(followerMatch[1].replaceAll(",", ""));
+    const suffix = (followerMatch[2] ?? "").toUpperCase();
+    if (suffix === "K") followerCount *= 1_000;
+    else if (suffix === "M") followerCount *= 1_000_000;
+    else if (suffix === "B") followerCount *= 1_000_000_000;
+    else if (suffix === "萬") followerCount *= 10_000;
+    return Number.isFinite(followerCount)
+      ? { displayName, followerCount: Math.round(followerCount) }
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 async function replaceSheet(auth: JWT, spreadsheetId: string, sheetName: string, rows: string[][]) {
@@ -163,24 +214,30 @@ async function syncMembers() {
   const personal: string[][] = [];
   const organizations: string[][] = [];
 
-  rows.slice(1).forEach((row, index) => {
+  for (const [index, row] of rows.slice(1).entries()) {
     const sourceRow = index + 2;
     const type = (row[columns.type] ?? "").trim();
     const boardingStatus = (row[columns.boardingStatus] ?? "").trim();
     if (type.includes("個人會員")) {
       const submittedName = (row[columns.personalName] ?? "").trim();
       const instagram = normalizeInstagramUrl(row[columns.instagram] ?? "");
-      if (!submittedName && !instagram) return;
+      if (!submittedName && !instagram) continue;
       const followerRaw = (row[columns.followerCount] ?? "").trim();
-      const existingAtRow = existingInstagramData.bySourceRow.get(String(sourceRow));
-      const existing = instagram && existingAtRow?.instagramUrl === instagram.url
-        ? existingAtRow
-        : instagram ? existingInstagramData.byInstagramUrl.get(instagram.url) : undefined;
+      const timestamp = row[columns.timestamp] ?? "";
+      const existingAtTimestamp = existingInstagramData.get(timestamp);
+      const existing = instagram && existingAtTimestamp?.instagramUrl === instagram.url
+        ? existingAtTimestamp
+        : undefined;
       const canPreserveEnrichment = Boolean(instagram && existing?.instagramUrl === instagram.url);
-      const displayName = canPreserveEnrichment && existing?.displayName
+      const publicProfile = instagram && !canPreserveEnrichment
+        ? await enrichPublicInstagram(instagram.url)
+        : null;
+      const displayName = publicProfile?.displayName ?? (canPreserveEnrichment && existing?.displayName
         ? existing.displayName
-        : submittedName;
-      const followerCount = canPreserveEnrichment && existing?.followerCount
+        : submittedName);
+      const followerCount = publicProfile?.followerCount != null
+        ? String(publicProfile.followerCount)
+        : canPreserveEnrichment && existing?.followerCountRaw === followerRaw && existing?.followerCount
         ? existing.followerCount
         : String(parseFollowerCount(followerRaw));
       personal.push([
@@ -192,14 +249,14 @@ async function syncMembers() {
       ]);
     } else if (type.includes("團體會員") || type.includes("企業團體會員")) {
       const brandName = (row[columns.brandName] ?? "").trim();
-      if (!brandName) return;
+      if (!brandName) continue;
       organizations.push([
         String(sourceRow), row[columns.timestamp] ?? "", type, brandName, row[columns.representative] ?? "", "",
         row[columns.organizationEmail] ?? "", row[columns.organizationLine] ?? "",
         boardingStatus, row[columns.organizationRequest] ?? "", syncedAt,
       ]);
     }
-  });
+  }
 
   await replaceSheet(auth, spreadsheetId, PERSONAL_SHEET, [PERSONAL_HEADERS, ...personal]);
   await replaceSheet(auth, spreadsheetId, ORGANIZATION_SHEET, [ORGANIZATION_HEADERS, ...organizations]);
@@ -207,10 +264,10 @@ async function syncMembers() {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const personalSourceRefs = personal.map((row) => `google-form:${spreadsheetId}:row:${row[0]}`);
-    const organizationSourceRefs = organizations.map((row) => `google-form:${spreadsheetId}:row:${row[0]}`);
+    const personalSourceRefs = personal.map((row) => googleFormSourceRef(spreadsheetId, row[1]));
+    const organizationSourceRefs = organizations.map((row) => googleFormSourceRef(spreadsheetId, row[1]));
     for (const row of personal) {
-      const sourceRef = `google-form:${spreadsheetId}:row:${row[0]}`;
+      const sourceRef = googleFormSourceRef(spreadsheetId, row[1]);
       await client.query(
         `INSERT INTO kol_profiles (
           name, ig_url, follower_count, follower_count_raw, collaboration_price,
@@ -239,7 +296,7 @@ async function syncMembers() {
       );
     }
     for (const row of organizations) {
-      const sourceRef = `google-form:${spreadsheetId}:row:${row[0]}`;
+      const sourceRef = googleFormSourceRef(spreadsheetId, row[1]);
       await client.query(
         `INSERT INTO imported_members (source_ref, source_row, member_type, display_name, email, line_id,
           representative_name, website_url, boarding_status, application_note, synced_at)
@@ -252,7 +309,7 @@ async function syncMembers() {
         [sourceRef, Number(row[0]), row[3], row[6] || null, row[7] || null, row[4] || null, row[5] || null, row[8] || null, row[9] || null]
       );
     }
-    const sourcePattern = `google-form:${spreadsheetId}:row:%`;
+    const sourcePattern = `google-form:${spreadsheetId}:%`;
     await client.query(
       `DELETE FROM kol_profiles
        WHERE source_ref LIKE $1 AND NOT (source_ref = ANY($2::text[]))`,

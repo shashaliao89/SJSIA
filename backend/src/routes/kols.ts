@@ -3,7 +3,7 @@ import { z } from "zod";
 import { JWT } from "google-auth-library";
 import { pool } from "../db/pool.js";
 import { requireAuth, requireRole, requireApproved } from "../middleware/auth.js";
-import { GOOGLE_PERSONAL_MEMBER_SHEET } from "../lib/google-sheet-names.js";
+import { GOOGLE_PERSONAL_MEMBER_SHEET, googleFormSourceRef } from "../lib/google-sheet-names.js";
 
 const router = Router();
 
@@ -24,17 +24,17 @@ async function loadPositioningTagsFromSheet() {
   const response = await auth.request<{ values?: Array<Array<string | number>> }>({
     url: `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}`,
   });
-  const tagsBySourceRow = new Map<string, string[]>();
+  const tagsBySourceRef = new Map<string, string[]>();
   for (const row of response.data.values ?? []) {
-    const sourceRow = String(row[0] ?? "").trim();
+    const timestamp = String(row[1] ?? "").trim();
     const tags = String(row[16] ?? "")
       .split("、")
       .map((tag) => tag.trim())
       .filter(Boolean)
       .slice(0, 5);
-    if (sourceRow && tags.length) tagsBySourceRow.set(sourceRow, tags);
+    if (timestamp && tags.length) tagsBySourceRef.set(googleFormSourceRef(spreadsheetId, timestamp), tags);
   }
-  return tagsBySourceRow;
+  return tagsBySourceRef;
 }
 
 const kolSchema = z.object({
@@ -70,12 +70,12 @@ router.get("/", requireAuth, requireApproved, async (req, res) => {
        ORDER BY follower_count DESC NULLS LAST, name ASC`
     );
     try {
-      const tagsBySourceRow = await loadPositioningTagsFromSheet();
-      if (tagsBySourceRow) {
+      const tagsBySourceRef = await loadPositioningTagsFromSheet();
+      if (tagsBySourceRef) {
         for (const kol of result.rows) {
-          const sourceRow = String(kol.source_ref ?? "").match(/:row:(\d+)$/)?.[1];
-          if (sourceRow && tagsBySourceRow.has(sourceRow)) {
-            kol.content_types = tagsBySourceRow.get(sourceRow);
+          const sourceRef = String(kol.source_ref ?? "");
+          if (tagsBySourceRef.has(sourceRef)) {
+            kol.content_types = tagsBySourceRef.get(sourceRef);
           }
         }
       }
