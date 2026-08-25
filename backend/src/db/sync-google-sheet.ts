@@ -56,6 +56,24 @@ function normalizeInstagramUrl(raw: string) {
   }
 }
 
+function findHeader(headers: string[], name: string, fallback: number) {
+  const index = headers.indexOf(name);
+  return index >= 0 ? index : fallback;
+}
+
+function findHeaderOccurrence(headers: string[], name: string, occurrence: number, fallback: number) {
+  let found = 0;
+  for (let index = 0; index < headers.length; index += 1) {
+    if (headers[index] === name && ++found === occurrence) return index;
+  }
+  return fallback;
+}
+
+function findHeaderStartsWith(headers: string[], prefix: string, fallback: number) {
+  const index = headers.findIndex((header) => header.startsWith(prefix));
+  return index >= 0 ? index : fallback;
+}
+
 function authClient() {
   return new JWT({
     email: requiredEnv("GOOGLE_SERVICE_ACCOUNT_EMAIL"),
@@ -85,18 +103,21 @@ async function readExistingInstagramData(auth: JWT, spreadsheetId: string) {
   const response = await auth.request<{ values?: Array<Array<string | number>> }>({
     url: `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}`,
   });
-  const data = new Map<string, ExistingInstagramData>();
+  const bySourceRow = new Map<string, ExistingInstagramData>();
+  const byInstagramUrl = new Map<string, ExistingInstagramData>();
   for (const row of response.data.values ?? []) {
     const sourceRow = String(row[0] ?? "").trim();
     if (!sourceRow) continue;
-    data.set(sourceRow, {
+    const existing = {
       displayName: String(row[4] ?? "").trim(),
       instagramUrl: String(row[6] ?? "").trim(),
       followerCount: String(row[8] ?? "").trim(),
       positioningTags: String(row[16] ?? "").trim(),
-    });
+    };
+    bySourceRow.set(sourceRow, existing);
+    if (existing.instagramUrl) byInstagramUrl.set(existing.instagramUrl, existing);
   }
-  return data;
+  return { bySourceRow, byInstagramUrl };
 }
 
 async function replaceSheet(auth: JWT, spreadsheetId: string, sheetName: string, rows: string[][]) {
@@ -119,20 +140,42 @@ async function syncMembers() {
   const existingInstagramData = await readExistingInstagramData(auth, spreadsheetId);
   if (rows.length < 2) throw new Error("Google Form response sheet returned no member rows");
 
+  const headers = rows[0].map((value) => value.trim());
+  const columns = {
+    timestamp: findHeader(headers, "時間戳記", 0),
+    type: findHeader(headers, "您欲申請的會員類別？", 1),
+    brandName: findHeader(headers, "品牌名稱", 2),
+    representative: findHeader(headers, "代表人 姓名", 3),
+    organizationLine: findHeaderOccurrence(headers, "您的 Line ID", 1, 4),
+    organizationEmail: findHeaderOccurrence(headers, "您的 Email （我們將會寄送入會收據給您）", 1, 5),
+    personalName: findHeader(headers, "您的 姓名", 7),
+    instagram: findHeader(headers, "您的 Instagram 帳號連結", 8),
+    personalLine: findHeaderOccurrence(headers, "您的 Line ID", 2, 9),
+    personalEmail: findHeaderOccurrence(headers, "您的 Email （我們將會寄送入會收據給您）", 2, 10),
+    collaborationPrice: findHeaderStartsWith(headers, "為協助協會媒合合適的品牌合作機會", 13),
+    followerCount: findHeader(headers, "您的 Instagram 粉絲人數", 14),
+    personalRequest: findHeader(headers, "加入協會主要訴求/想對我們說的話", 15),
+    organizationRequest: findHeader(headers, "是否有意願", 16),
+    boardingStatus: 19,
+  };
+
   const syncedAt = new Date().toISOString();
   const personal: string[][] = [];
   const organizations: string[][] = [];
 
   rows.slice(1).forEach((row, index) => {
     const sourceRow = index + 2;
-    const type = (row[1] ?? "").trim();
-    const boardingStatus = (row[19] ?? "").trim();
+    const type = (row[columns.type] ?? "").trim();
+    const boardingStatus = (row[columns.boardingStatus] ?? "").trim();
     if (type.includes("個人會員")) {
-      const submittedName = (row[7] ?? "").trim();
-      const instagram = normalizeInstagramUrl(row[8] ?? "");
+      const submittedName = (row[columns.personalName] ?? "").trim();
+      const instagram = normalizeInstagramUrl(row[columns.instagram] ?? "");
       if (!submittedName && !instagram) return;
-      const followerRaw = (row[14] ?? "").trim();
-      const existing = existingInstagramData.get(String(sourceRow));
+      const followerRaw = (row[columns.followerCount] ?? "").trim();
+      const existingAtRow = existingInstagramData.bySourceRow.get(String(sourceRow));
+      const existing = instagram && existingAtRow?.instagramUrl === instagram.url
+        ? existingAtRow
+        : instagram ? existingInstagramData.byInstagramUrl.get(instagram.url) : undefined;
       const canPreserveEnrichment = Boolean(instagram && existing?.instagramUrl === instagram.url);
       const displayName = canPreserveEnrichment && existing?.displayName
         ? existing.displayName
@@ -141,18 +184,19 @@ async function syncMembers() {
         ? existing.followerCount
         : String(parseFollowerCount(followerRaw));
       personal.push([
-        String(sourceRow), row[0] ?? "", type, submittedName, displayName,
+        String(sourceRow), row[columns.timestamp] ?? "", type, submittedName, displayName,
         instagram?.handle ?? "", instagram?.url ?? "", followerRaw,
-        followerCount, row[13] ?? "", row[10] ?? "", row[9] ?? "",
-        boardingStatus, row[15] ?? "", instagram ? "連結已標準化；顯示名稱待 Meta API 驗證" : "Instagram 連結待補", syncedAt,
+        followerCount, row[columns.collaborationPrice] ?? "", row[columns.personalEmail] ?? "", row[columns.personalLine] ?? "",
+        boardingStatus, row[columns.personalRequest] ?? "", instagram ? "連結已標準化；顯示名稱待 Meta API 驗證" : "Instagram 連結待補", syncedAt,
         canPreserveEnrichment ? existing?.positioningTags ?? "" : "",
       ]);
     } else if (type.includes("團體會員") || type.includes("企業團體會員")) {
-      const brandName = (row[2] ?? "").trim();
+      const brandName = (row[columns.brandName] ?? "").trim();
       if (!brandName) return;
       organizations.push([
-        String(sourceRow), row[0] ?? "", type, brandName, row[3] ?? "", "", row[5] ?? "", row[4] ?? "",
-        boardingStatus, row[16] ?? "", syncedAt,
+        String(sourceRow), row[columns.timestamp] ?? "", type, brandName, row[columns.representative] ?? "", "",
+        row[columns.organizationEmail] ?? "", row[columns.organizationLine] ?? "",
+        boardingStatus, row[columns.organizationRequest] ?? "", syncedAt,
       ]);
     }
   });
@@ -163,6 +207,8 @@ async function syncMembers() {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    const personalSourceRefs = personal.map((row) => `google-form:${spreadsheetId}:row:${row[0]}`);
+    const organizationSourceRefs = organizations.map((row) => `google-form:${spreadsheetId}:row:${row[0]}`);
     for (const row of personal) {
       const sourceRef = `google-form:${spreadsheetId}:row:${row[0]}`;
       await client.query(
@@ -185,6 +231,7 @@ async function syncMembers() {
           instagram_url, follower_count, collaboration_price, boarding_status, application_note, synced_at)
          VALUES ($1,$2,'kol',$3,$4,$5,$6,$7,$8,$9,$10,NOW())
          ON CONFLICT (source_ref) DO UPDATE SET display_name=EXCLUDED.display_name, email=EXCLUDED.email,
+          member_type='kol', source_row=EXCLUDED.source_row,
           line_id=EXCLUDED.line_id, instagram_url=EXCLUDED.instagram_url, follower_count=EXCLUDED.follower_count,
           collaboration_price=EXCLUDED.collaboration_price, boarding_status=EXCLUDED.boarding_status,
           application_note=EXCLUDED.application_note, synced_at=NOW()`,
@@ -198,12 +245,25 @@ async function syncMembers() {
           representative_name, website_url, boarding_status, application_note, synced_at)
          VALUES ($1,$2,'brand',$3,$4,$5,$6,$7,$8,$9,NOW())
          ON CONFLICT (source_ref) DO UPDATE SET display_name=EXCLUDED.display_name, email=EXCLUDED.email,
+          member_type='brand', source_row=EXCLUDED.source_row,
           line_id=EXCLUDED.line_id, representative_name=EXCLUDED.representative_name,
           website_url=EXCLUDED.website_url, boarding_status=EXCLUDED.boarding_status,
           application_note=EXCLUDED.application_note, synced_at=NOW()`,
         [sourceRef, Number(row[0]), row[3], row[6] || null, row[7] || null, row[4] || null, row[5] || null, row[8] || null, row[9] || null]
       );
     }
+    const sourcePattern = `google-form:${spreadsheetId}:row:%`;
+    await client.query(
+      `DELETE FROM kol_profiles
+       WHERE source_ref LIKE $1 AND NOT (source_ref = ANY($2::text[]))`,
+      [sourcePattern, personalSourceRefs]
+    );
+    await client.query(
+      `DELETE FROM imported_members
+       WHERE source_ref LIKE $1
+         AND NOT (source_ref = ANY($2::text[]) OR source_ref = ANY($3::text[]))`,
+      [sourcePattern, personalSourceRefs, organizationSourceRefs]
+    );
     await client.query("COMMIT");
     console.log(`Synced ${personal.length} personal and ${organizations.length} organization members from Google Form.`);
   } catch (error) {
