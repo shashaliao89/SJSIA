@@ -48,7 +48,12 @@ export default function LoginPage() {
           />
         </div>
         <div>
-          <label htmlFor="password">密碼</label>
+          <div className="flex items-center justify-between gap-3">
+            <label htmlFor="password">密碼</label>
+            <Link href="/forgot-password" className="text-xs font-bold text-[#CFFF1A] hover:underline">
+              忘記密碼？
+            </Link>
+          </div>
           <input
             id="password"
             type="password"
@@ -67,7 +72,7 @@ export default function LoginPage() {
         </button>
       </form>
       <p className="mt-6 text-center text-sm text-gray-400">
-        還沒有帳號？{" "}
+        團體會員還沒有帳號？{" "}
         <Link href="/register" className="font-bold text-[#CFFF1A] hover:underline">
           立即註冊
         </Link>

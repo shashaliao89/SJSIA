@@ -43,6 +43,8 @@ app.get("/health", (_req, res) => {
 
 app.use("/api/auth/login", authLimiter);
 app.use("/api/auth/register", authLimiter);
+app.use("/api/auth/verification-code", authLimiter);
+app.use("/api/auth/reset-password", authLimiter);
 app.use("/api/auth", authRoutes);
 app.use("/api/members", membersRoutes);
 app.use("/api/kols", kolsRoutes);

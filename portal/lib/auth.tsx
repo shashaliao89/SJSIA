@@ -27,9 +27,8 @@ interface AuthContextValue {
 interface RegisterPayload {
   email: string;
   password: string;
-  role: "brand" | "kol";
-  brandName?: string;
-  kolName?: string;
+  brandName: string;
+  verificationCode: string;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);

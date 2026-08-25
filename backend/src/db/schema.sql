@@ -31,10 +31,25 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash VARCHAR(255) NOT NULL,
   role user_role NOT NULL,
   status user_status NOT NULL DEFAULT 'pending',
+  email_verified_at TIMESTAMPTZ,
   membership_expires_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS auth_verification_codes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR(255) NOT NULL,
+  purpose VARCHAR(30) NOT NULL CHECK (purpose IN ('register', 'reset_password')),
+  code_hash VARCHAR(64) NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  consumed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_auth_verification_codes_lookup
+  ON auth_verification_codes(email, purpose, created_at DESC);
 
 CREATE TABLE IF NOT EXISTS brand_profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -179,6 +194,7 @@ CREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status);
 CREATE INDEX IF NOT EXISTS idx_kol_profiles_public ON kol_profiles(is_public);
 CREATE INDEX IF NOT EXISTS idx_kol_profiles_follower_count ON kol_profiles(follower_count);
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMPTZ;
 
 -- Migrate existing KOL profiles when these columns are introduced after initial setup.
 ALTER TABLE kol_profiles ALTER COLUMN collaboration_price TYPE TEXT;

@@ -10,6 +10,12 @@ Monorepo 結構：
 
 詳見 [DEPLOY.md](./DEPLOY.md)。
 
+## 會員驗證信
+
+Backend 的 Railway Variables 需設定 `SMTP_HOST`、`SMTP_PORT`、`SMTP_USER`、
+`SMTP_PASS`、`EMAIL_FROM`。正式寄件人使用 `shasha.liao@stepc.co`；若信箱由
+Google Workspace 管理，`SMTP_PASS` 應使用該帳號的應用程式密碼，不要使用登入密碼。
+
 ## 本機開發
 
 ```bash
