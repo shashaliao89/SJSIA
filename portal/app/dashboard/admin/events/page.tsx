@@ -170,6 +170,7 @@ export default function AdminEventsPage() {
   const [viewRegistrationsFor, setViewRegistrationsFor] = useState<string | null>(null);
   const [registrations, setRegistrations] = useState<EventRegistration[]>([]);
   const [loadingRegistrations, setLoadingRegistrations] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   async function load() {
     const data = await api<{ events: EventItem[] }>("/api/events", { token });
@@ -190,6 +191,24 @@ export default function AdminEventsPage() {
     } catch (err) {
       alert(err instanceof ApiError ? err.message : "新增失敗");
       throw err;
+    }
+  }
+
+  async function syncFromGoogleSheet() {
+    setSyncing(true);
+    setMessage("");
+    try {
+      const data = await api<{ result: { created: number; updated: number; unpublished: number; skipped: number } }>(
+        "/api/events/sync-google-sheet",
+        { method: "POST", token }
+      );
+      const { created, updated, unpublished, skipped } = data.result;
+      setMessage(`同步完成：新增 ${created}、更新 ${updated}、下架 ${unpublished}${skipped ? `、略過 ${skipped} 筆格式不完整資料` : ""}`);
+      await load();
+    } catch (err) {
+      alert(err instanceof ApiError ? err.message : "同步失敗");
+    } finally {
+      setSyncing(false);
     }
   }
 
@@ -271,8 +290,30 @@ export default function AdminEventsPage() {
 
   return (
     <DashboardShell role="admin" title="Admin Dashboard" nav={ADMIN_NAV}>
-      <PageHeader title="活動管理" description="新增、編輯協會活動，並查看報名清單。" />
+      <PageHeader title="活動管理" description="透過 Google 試算表上架、下架活動，並在此查看會員報名清單。" />
       {message ? <p className="mb-4 text-sm font-semibold text-[#CFFF1A]">{message}</p> : null}
+
+      <Card className="mb-6 border-[#CFFF1A]/20 bg-[#CFFF1A]/5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="font-black text-white">Google 試算表活動後台</p>
+            <p className="mt-1 text-sm text-gray-400">填寫活動資料後將「上架狀態」設為上架，再按同步即可顯示於會員後台。</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <a
+              href="https://docs.google.com/spreadsheets/d/1AsJZqXeo_6WOC7OmeAoetLbzQV4_zzwongKvu_135Yk/edit#gid=31082026"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center rounded-lg border border-white/15 px-4 py-2 text-sm font-bold text-white transition hover:border-[#CFFF1A]/50"
+            >
+              開啟活動試算表
+            </a>
+            <Button onClick={syncFromGoogleSheet} disabled={syncing}>
+              {syncing ? "同步中…" : "立即同步"}
+            </Button>
+          </div>
+        </div>
+      </Card>
 
       <div className="mb-6">
         <Button onClick={openCreateForm}>{showCreateForm ? "取消新增" : "+ 新增活動"}</Button>
@@ -295,6 +336,12 @@ export default function AdminEventsPage() {
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="min-w-0 flex-1">
                   <h3 className="font-black">{ev.title}</h3>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Badge tone={ev.is_published ? "success" : "default"}>
+                      {ev.is_published ? "已上架" : "已下架"}
+                    </Badge>
+                    {ev.source_ref ? <Badge tone="default">Google 試算表</Badge> : <Badge tone="default">後台建立</Badge>}
+                  </div>
                   <p className="mt-1 text-sm text-[#CFFF1A]">{formatDateTime(ev.event_date)}</p>
                   {ev.location ? <p className="text-sm text-gray-400">{ev.location}</p> : null}
                   {ev.max_participants ? (

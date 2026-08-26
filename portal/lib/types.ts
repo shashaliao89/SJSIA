@@ -113,6 +113,9 @@ export interface EventItem {
   location: string | null;
   max_participants: number | null;
   allow_brand_exposure: boolean;
+  is_published: boolean;
+  registration_deadline: string | null;
+  source_ref: string | null;
   registration_id?: string | null;
   exposure_requested?: boolean;
 }

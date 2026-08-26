@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { pool } from "../db/pool.js";
 import { requireAuth, requireRole, requireApproved } from "../middleware/auth.js";
+import { ACTIVITY_SHEET_URL, syncGoogleEvents, syncGoogleEventsIfDue } from "../lib/google-events.js";
 
 const router = Router();
 
@@ -15,6 +16,11 @@ const eventSchema = z.object({
 });
 
 router.get("/", requireAuth, requireApproved, async (req, res) => {
+  try {
+    await syncGoogleEventsIfDue();
+  } catch (error) {
+    console.error("Google activity sync failed:", error instanceof Error ? error.message : error);
+  }
   const role = req.user!.role;
   const events = await pool.query(`SELECT * FROM events ORDER BY event_date ASC`);
 
@@ -26,10 +32,21 @@ router.get("/", requireAuth, requireApproved, async (req, res) => {
     `SELECT e.*, er.id AS registration_id, er.exposure_requested, er.status AS registration_status
      FROM events e
      LEFT JOIN event_registrations er ON er.event_id = e.id AND er.user_id = $1
+     WHERE e.is_published = true
      ORDER BY e.event_date ASC`,
     [req.user!.id]
   );
   res.json({ events: withRegistration.rows });
+});
+
+router.post("/sync-google-sheet", requireAuth, requireRole("admin"), async (_req, res) => {
+  try {
+    const result = await syncGoogleEvents();
+    res.json({ ok: true, result, sheet_url: ACTIVITY_SHEET_URL });
+  } catch (error) {
+    console.error("Google activity sync failed:", error instanceof Error ? error.message : error);
+    res.status(502).json({ error: "活動試算表同步失敗，請確認欄位與 Google 授權設定" });
+  }
 });
 
 router.post("/", requireAuth, requireRole("admin"), async (req, res) => {
@@ -99,12 +116,18 @@ router.post("/:id/register", requireAuth, requireApproved, async (req, res) => {
   const { exposure_requested } = req.body as { exposure_requested?: boolean };
   const role = req.user!.role;
 
-  const event = await pool.query(`SELECT * FROM events WHERE id = $1`, [req.params.id]);
+  const event = await pool.query(
+    `SELECT * FROM events WHERE id = $1 AND is_published = true`,
+    [req.params.id]
+  );
   if (event.rows.length === 0) {
     return res.status(404).json({ error: "找不到活動" });
   }
 
   const ev = event.rows[0];
+  if (ev.registration_deadline && new Date(ev.registration_deadline).getTime() < Date.now()) {
+    return res.status(400).json({ error: "此活動已截止報名" });
+  }
   if (role === "brand" && exposure_requested && !ev.allow_brand_exposure) {
     return res.status(400).json({ error: "此活動不開放品牌露出申請" });
   }
