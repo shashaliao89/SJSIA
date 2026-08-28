@@ -22,9 +22,9 @@ export const metadata: Metadata = {
     template: "%s｜SJSIA",
   },
   description:
-    "盛家運動健康產業協會（SJSIA）：連結創作者與品牌資源、活動公告、核心成員與入會方案。",
+    "盛家健康發展協會（SJSIA）：連結創作者與品牌資源、活動公告、核心成員與入會方案。",
   keywords: [
-    "盛家運動健康產業協會",
+    "盛家健康發展協會",
     "SJSIA",
     "運動產業協會",
     "運動創作者",
@@ -67,7 +67,7 @@ const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
   "@id": "https://sjsia.org/#organization",
-  name: "盛家運動健康產業協會",
+  name: "盛家健康發展協會",
   alternateName: "SJSIA",
   url: "https://sjsia.org",
   logo: "https://sjsia.org/campaign/logo.PNG",

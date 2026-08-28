@@ -61,7 +61,7 @@ export function SiteFooter() {
         </div>
       </div>
       <p className="mx-auto mt-12 max-w-7xl text-center text-xs font-bold text-gray-600">
-        © {new Date().getFullYear()} SHENG JIA SPORTS &amp; HEALTH ASSOCIATION. ALL RIGHTS
+        © {new Date().getFullYear()} SHENG JIA HEALTH DEVELOPMENT ASSOCIATION. ALL RIGHTS
         RESERVED.
         <span className="mx-2 opacity-40" aria-hidden>
           ·

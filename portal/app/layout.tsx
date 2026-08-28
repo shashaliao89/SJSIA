@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "盛家協會會員後台 | SJSIA Portal",
-  description: "盛家運動健康產業協會會員後台系統",
+  description: "盛家健康發展協會會員後台系統",
 };
 
 export const viewport = {

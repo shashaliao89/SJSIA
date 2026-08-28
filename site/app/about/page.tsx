@@ -5,10 +5,10 @@ import { SiteFooter } from "@/app/_components/SiteFooter";
 
 export const metadata: Metadata = {
   title: "關於協會",
-  description: "認識盛家運動健康產業協會 SJSIA，了解我們如何串聯運動創作者、品牌、場館、媒體與賽事資源。",
+  description: "認識盛家健康發展協會 SJSIA，了解我們如何串聯運動創作者、品牌、場館、媒體與賽事資源。",
   alternates: { canonical: "/about" },
   openGraph: {
-    title: "關於盛家運動健康產業協會 SJSIA",
+    title: "關於盛家健康發展協會 SJSIA",
     description: "台灣運動健康產業的資源整合平台與信任中樞。",
     url: "/about",
   },
@@ -31,7 +31,7 @@ export default function AboutPage() {
         <div className="relative z-10 mx-auto max-w-7xl">
           <p className="site-eyebrow mb-4 tracking-[0.35em]">關於協會</p>
           <h1 className="text-4xl font-black leading-tight md:text-6xl">
-            盛家運動健康產業協會{" "}
+            盛家健康發展協會{" "}
             <span className="text-[#CFFF1A]">SJSIA</span>
           </h1>
           <p className="mt-8 max-w-2xl text-lg font-bold text-white/85 md:text-2xl">

@@ -32,7 +32,7 @@ export default function HomePage() {
       <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-20">
         <p className="mb-3 text-xs font-black tracking-[0.3em] text-gray-500">MEMBER PORTAL</p>
         <h1 className="max-w-3xl text-4xl font-black leading-tight md:text-6xl">
-          盛家運動健康產業協會
+          盛家健康發展協會
           <span className="text-[#CFFF1A]"> 會員後台</span>
         </h1>
         <p className="mt-6 max-w-2xl text-lg text-gray-400">

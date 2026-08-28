@@ -1,4 +1,4 @@
-# SJSIA 盛家運動健康產業協會
+# SJSIA 盛家健康發展協會
 
 Monorepo 結構：
 

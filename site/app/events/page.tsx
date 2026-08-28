@@ -5,10 +5,10 @@ const API_URL = process.env.SJSIA_API_URL ?? "https://sjsia-production.up.railwa
 
 export const metadata: Metadata = {
   title: "活動公告",
-  description: "查看盛家運動健康產業協會 SJSIA 最新運動活動、品牌交流、會員聚會與報名資訊。",
+  description: "查看盛家健康發展協會 SJSIA 最新運動活動、品牌交流、會員聚會與報名資訊。",
   alternates: { canonical: "/events" },
   openGraph: {
-    title: "活動公告｜盛家運動健康產業協會",
+    title: "活動公告｜盛家健康發展協會",
     description: "每月運動交流、品牌合作與會員限定活動一覽。",
     url: "/events",
   },
@@ -43,7 +43,7 @@ export default async function EventsPage() {
       : undefined,
     organizer: {
       "@type": "Organization",
-      name: "盛家運動健康產業協會",
+      name: "盛家健康發展協會",
       url: "https://sjsia.org",
     },
     url: event.signup_url ?? "https://sjsia.org/events",

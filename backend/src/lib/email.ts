@@ -36,7 +36,7 @@ export async function sendVerificationEmail({
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: `盛家運動健康產業協會 <${from}>`,
+        from: `盛家健康發展協會 <${from}>`,
         to: [email],
         subject,
         text,
@@ -68,7 +68,7 @@ export async function sendVerificationEmail({
   });
 
   await transporter.sendMail({
-    from: `盛家運動健康產業協會 <${from}>`,
+    from: `盛家健康發展協會 <${from}>`,
     to: email,
     subject,
     text,

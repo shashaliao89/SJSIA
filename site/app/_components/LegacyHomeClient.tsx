@@ -153,7 +153,7 @@ export function LegacyHomeClient() {
               SHENG JIA SPORTS &amp; HEALTH
             </p>
             <h1 className="text-4xl font-black leading-[1.1] md:text-6xl lg:text-7xl">
-              <span className="block">盛家運動健康產業協會</span>
+              <span className="block">盛家健康發展協會</span>
               <span className="block text-[#CFFF1A]">SJSIA</span>
             </h1>
             <p className="mt-6 max-w-2xl text-lg font-bold leading-relaxed text-white/90 md:mt-8 md:text-xl">

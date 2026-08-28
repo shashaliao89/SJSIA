@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "盛家運動健康產業協會 SJSIA｜連結影響力，放大商業價值";
+export const alt = "盛家健康發展協會 SJSIA｜連結影響力，放大商業價值";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -26,7 +26,7 @@ export default function OpenGraphImage() {
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
           <div style={{ fontSize: 62, lineHeight: 1.15, fontWeight: 900 }}>
-            盛家運動健康產業協會
+            盛家健康發展協會
           </div>
           <div style={{ fontSize: 36, fontWeight: 800, color: "#CFFF1A" }}>
             連結影響力，放大商業價值。
