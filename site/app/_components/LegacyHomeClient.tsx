@@ -159,9 +159,6 @@ export function LegacyHomeClient() {
             <p className="mt-6 max-w-2xl text-lg font-bold leading-relaxed text-white/90 md:mt-8 md:text-xl">
               連結影響力 · 放大商業價值 · 打造健康生活圈
             </p>
-            <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-white/65 md:text-base">
-              由 Peeta 擔任理事長，串聯運動創作者、健康品牌、場館與賽事資源。
-            </p>
             <div className="mt-8 flex flex-wrap gap-3 md:mt-10 md:gap-4">
               <button
                 type="button"
