@@ -10,7 +10,7 @@ const TEAM_MEMBERS = [
     name: "Peeta",
     title: "協會理事長",
     image: "/campaign/peeta.png",
-    bio: "健身與營養學KOL，創立 STEPX 健身房與 STEPV 補給品牌。",
+    bio: "盛家健康發展協會理事長，健身與營養學 KOL，創立 STEPX 健身房與 STEPV 補給品牌。",
   },
   {
     name: "Lance",
@@ -108,7 +108,11 @@ export default function TeamPage() {
     <div className="bg-[#0A0A0A] text-white">
       <section id="team" className="scroll-mt-28 px-6 py-24">
         <div className="mx-auto max-w-7xl">
-          <SitePageIntro eyebrow="CORE TEAM" title="協會理事介紹" />
+          <SitePageIntro
+            eyebrow="CORE TEAM"
+            title="協會理事介紹"
+            description="由理事長 Peeta 帶領，串聯運動、健康、內容、品牌與賽事領域的核心夥伴。"
+          />
           <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {TEAM_MEMBERS.map((member) => (
               <motion.div
@@ -127,7 +131,7 @@ export default function TeamPage() {
                   />
                   <Image
                     src={member.image}
-                    alt={member.name}
+                    alt={`${member.name}｜${member.title}`}
                     fill
                     sizes="80px"
                     className="object-cover"

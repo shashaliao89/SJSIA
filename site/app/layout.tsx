@@ -26,6 +26,11 @@ export const metadata: Metadata = {
   keywords: [
     "盛家健康發展協會",
     "SJSIA",
+    "Peeta",
+    "Peeta 葛格",
+    "健康協會",
+    "運動健康協會",
+    "健康產業",
     "運動產業協會",
     "運動創作者",
     "KOL 媒合",
@@ -75,6 +80,14 @@ const organizationJsonLd = {
   email: CONTACT.email,
   telephone: CONTACT.phone,
   sameAs: [IG_OFFICIAL_URL],
+  member: {
+    "@type": "Person",
+    "@id": "https://sjsia.org/team#peeta",
+    name: "Peeta",
+    alternateName: "Peeta 葛格",
+    jobTitle: "理事長",
+    sameAs: ["https://www.instagram.com/peeta.gege/"],
+  },
 };
 
 export default function RootLayout({

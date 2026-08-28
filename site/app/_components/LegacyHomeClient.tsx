@@ -150,7 +150,7 @@ export function LegacyHomeClient() {
             transition={{ duration: 0.65 }}
           >
             <p className="site-eyebrow mb-4 tracking-[0.35em]">
-              SHENG JIA SPORTS &amp; HEALTH
+              SHENG JIA HEALTH DEVELOPMENT
             </p>
             <h1 className="text-4xl font-black leading-[1.1] md:text-6xl lg:text-7xl">
               <span className="block">盛家健康發展協會</span>
@@ -158,6 +158,9 @@ export function LegacyHomeClient() {
             </h1>
             <p className="mt-6 max-w-2xl text-lg font-bold leading-relaxed text-white/90 md:mt-8 md:text-xl">
               連結影響力 · 放大商業價值 · 打造健康生活圈
+            </p>
+            <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-white/65 md:text-base">
+              由 Peeta 擔任理事長，串聯運動創作者、健康品牌、場館與賽事資源。
             </p>
             <div className="mt-8 flex flex-wrap gap-3 md:mt-10 md:gap-4">
               <button
@@ -205,7 +208,8 @@ export function LegacyHomeClient() {
               整合平台 / 信任中樞
             </h3>
             <p className="text-base leading-relaxed text-gray-400 md:text-lg">
-              盛家協會透過數據化的平台，確保每一分影響力都能轉化為實質收益。
+              盛家健康發展協會由理事長 Peeta 帶領，透過數據化平台整合運動與健康產業資源，
+              讓創作者影響力、品牌合作與實體活動轉化為可持續的商業價值。
             </p>
             <div className="mt-8 flex flex-wrap gap-8 md:mt-10 md:gap-12">
               <div>
