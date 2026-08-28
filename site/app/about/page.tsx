@@ -1,6 +1,18 @@
 import Image from "next/image";
+import type { Metadata } from "next";
 import { Globe, ShieldCheck, Users } from "lucide-react";
 import { SiteFooter } from "@/app/_components/SiteFooter";
+
+export const metadata: Metadata = {
+  title: "關於協會",
+  description: "認識盛家運動健康產業協會 SJSIA，了解我們如何串聯運動創作者、品牌、場館、媒體與賽事資源。",
+  alternates: { canonical: "/about" },
+  openGraph: {
+    title: "關於盛家運動健康產業協會 SJSIA",
+    description: "台灣運動健康產業的資源整合平台與信任中樞。",
+    url: "/about",
+  },
+};
 
 export default function AboutPage() {
   return (
@@ -90,4 +102,3 @@ export default function AboutPage() {
     </div>
   );
 }
-

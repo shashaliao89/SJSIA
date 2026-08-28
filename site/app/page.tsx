@@ -7,11 +7,13 @@ export const metadata: Metadata = {
     absolute: `${SITE_NAME}｜${SITE_TAGLINE}`,
   },
   description: `${SITE_NAME}：${SITE_TAGLINE} 提供協會介紹、活動公告、核心成員與入會方案。`,
+  alternates: { canonical: "/" },
   openGraph: {
     title: `${SITE_NAME}｜${SITE_TAGLINE}`,
     description: `${SITE_NAME} 官方網站：活動、入會與產業媒合資訊。`,
     locale: "zh_TW",
     type: "website",
+    url: "/",
   },
 };
 
