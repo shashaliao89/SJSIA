@@ -1,5 +1,8 @@
 export const FORM_URL = "https://forms.gle/A1C3eNhqE5s6LQ6f9";
 
+export const CORPORATE_DECK_URL =
+  "https://docs.google.com/presentation/d/1l5HiG65Ft4K0WLRruK8DxtcBoN-J8rYvJIFEq8QUTG4/edit?usp=sharing";
+
 export const IG_OFFICIAL_URL =
   "https://www.instagram.com/sjsia_tw?igsh=MW56ZXVhcm5yYnI0ZQ%3D%3D&utm_source=qr";
 

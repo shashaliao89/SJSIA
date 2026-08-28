@@ -19,11 +19,12 @@ import {
   ChevronRight,
   Globe,
   Infinity as InfinityIcon,
+  Presentation,
   ShieldCheck,
   Users,
 } from "lucide-react";
 import { SiteFooter } from "@/app/_components/SiteFooter";
-import { FORM_URL } from "@/lib/contact";
+import { CORPORATE_DECK_URL, FORM_URL } from "@/lib/contact";
 const CORE_CREATORS = [
   { name: "Peeta", image: "/creators/peeta.png", instagram: "https://www.instagram.com/peeta.gege/" },
   { name: "Ian Lee", image: "/creators/ian-lee.png", instagram: "https://www.instagram.com/ilee0223/" },
@@ -429,6 +430,15 @@ export function LegacyHomeClient() {
                   </li>
                 ))}
               </ul>
+              <a
+                href={CORPORATE_DECK_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#CFFF1A] px-6 py-3 text-sm font-black text-[#0A0A0A] transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <Presentation size={18} aria-hidden />
+                查看團體會員介紹簡報
+              </a>
             </motion.div>
           </div>
         </div>

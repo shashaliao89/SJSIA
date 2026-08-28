@@ -1,10 +1,10 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Presentation } from "lucide-react";
 import { SiteFooter } from "@/app/_components/SiteFooter";
 import { SitePageIntro } from "@/app/_components/SitePageIntro";
-import { FORM_URL, IG_OFFICIAL_URL } from "@/lib/contact";
+import { CORPORATE_DECK_URL, FORM_URL, IG_OFFICIAL_URL } from "@/lib/contact";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 28 },
@@ -81,14 +81,27 @@ export default function PlansPage() {
                   <Check className="shrink-0 text-[#CFFF1A]" size={18} /> 指定窗口專案管理
                 </li>
               </ul>
-              <a
-                href={IG_OFFICIAL_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-[#CFFF1A] px-6 py-3 font-black text-[#CFFF1A] transition-colors hover:bg-[#CFFF1A] hover:text-[#0A0A0A]"
-              >
-                聯繫企業方案 <ArrowRight size={18} />
-              </a>
+              <p className="mb-4 text-sm leading-relaxed text-gray-400">
+                先查看完整合作實績、會員方案與年度活動規劃，再與協會窗口討論合作方向。
+              </p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <a
+                  href={CORPORATE_DECK_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#CFFF1A] px-6 py-3 font-black text-[#0A0A0A] transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <Presentation size={18} /> 查看團體會員簡報
+                </a>
+                <a
+                  href={IG_OFFICIAL_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#CFFF1A] px-6 py-3 font-black text-[#CFFF1A] transition-colors hover:bg-[#CFFF1A] hover:text-[#0A0A0A]"
+                >
+                  聯繫企業方案 <ArrowRight size={18} />
+                </a>
+              </div>
             </motion.div>
           </div>
         </div>
