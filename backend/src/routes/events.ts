@@ -13,6 +13,25 @@ const eventSchema = z.object({
   location: z.string().optional().nullable(),
   max_participants: z.number().int().optional().nullable(),
   allow_brand_exposure: z.boolean().optional(),
+  signup_url: z.string().url().optional().nullable(),
+});
+
+router.get("/public", async (_req, res) => {
+  try {
+    await syncGoogleEventsIfDue();
+  } catch (error) {
+    console.error("Google activity sync failed:", error instanceof Error ? error.message : error);
+  }
+
+  const result = await pool.query(
+    `SELECT id, title, description, event_date, location, max_participants,
+            registration_deadline, signup_url
+     FROM events
+     WHERE is_published = true
+     ORDER BY event_date DESC`
+  );
+  res.set("Cache-Control", "public, max-age=30, stale-while-revalidate=120");
+  res.json({ events: result.rows });
 });
 
 router.get("/", requireAuth, requireApproved, async (req, res) => {

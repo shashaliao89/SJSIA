@@ -10,7 +10,7 @@ import { getPortalUrl } from "@/lib/portal";
 const PORTAL_LOGIN_URL = getPortalUrl("/login");
 
 const NAV_ITEMS = [
-  { href: "/", label: "關於協會" },
+  { href: "/#about", label: "關於協會" },
   { href: "/events", label: "活動公告" },
   { href: "/team", label: "核心成員" },
   { href: "/plans", label: "入會方案" },
@@ -76,7 +76,8 @@ export function TopNav() {
 
           <div className="hidden md:flex items-center gap-8 text-sm font-bold tracking-wide">
             {NAV_ITEMS.map((item) => {
-              const active = pathname === item.href;
+              const active =
+                item.href === "/#about" ? pathname === "/" : pathname === item.href;
 
               return (
                 <Link
@@ -112,19 +113,20 @@ export function TopNav() {
               href={FORM_URL}
               target="_blank"
               rel="noreferrer"
-              className="rounded-full bg-[#CFFF1A] text-[#0A0A0A] px-4 py-2 sm:px-6 text-xs sm:text-sm font-black hover:scale-105 transition-transform active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#CFFF1A]"
+              className="hidden min-[430px]:inline-flex rounded-full bg-[#CFFF1A] text-[#0A0A0A] px-4 py-2 sm:px-6 text-xs sm:text-sm font-black hover:scale-105 transition-transform active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#CFFF1A]"
             >
               立即加入
             </a>
             <button
               type="button"
-              className="md:hidden inline-flex h-11 w-11 items-center justify-center rounded-lg border border-white/15 text-white hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#CFFF1A]"
+              className="md:hidden inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-white/15 px-3 text-white hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#CFFF1A]"
               aria-expanded={mobileOpen}
               aria-controls="mobile-nav-panel"
               aria-label={mobileOpen ? "關閉選單" : "開啟選單"}
               onClick={() => setMobileOpen((v) => !v)}
             >
-              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+              {mobileOpen ? <X size={21} /> : <Menu size={21} />}
+              <span className="text-xs font-black">{mobileOpen ? "關閉" : "選單"}</span>
             </button>
           </div>
         </div>
@@ -140,7 +142,8 @@ export function TopNav() {
         >
           <div className="flex flex-col gap-2 text-lg font-black tracking-widest">
             {NAV_ITEMS.map((item) => {
-              const active = pathname === item.href;
+              const active =
+                item.href === "/#about" ? pathname === "/" : pathname === item.href;
 
               return (
                 <Link

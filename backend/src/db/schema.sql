@@ -173,6 +173,7 @@ CREATE TABLE IF NOT EXISTS events (
   allow_brand_exposure BOOLEAN NOT NULL DEFAULT false,
   is_published BOOLEAN NOT NULL DEFAULT true,
   registration_deadline TIMESTAMPTZ,
+  signup_url VARCHAR(1000),
   source_ref VARCHAR(255),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -180,6 +181,7 @@ CREATE TABLE IF NOT EXISTS events (
 
 ALTER TABLE events ADD COLUMN IF NOT EXISTS is_published BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS registration_deadline TIMESTAMPTZ;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS signup_url VARCHAR(1000);
 ALTER TABLE events ADD COLUMN IF NOT EXISTS source_ref VARCHAR(255);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_events_source_ref
   ON events(source_ref) WHERE source_ref IS NOT NULL;

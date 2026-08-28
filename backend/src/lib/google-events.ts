@@ -49,7 +49,7 @@ function parseBoolean(value: unknown) {
 export async function syncGoogleEvents(): Promise<GoogleEventSyncResult> {
   const spreadsheetId = requiredEnv("GOOGLE_SHEET_ID");
   const auth = authClient();
-  const range = encodeURIComponent(`'${ACTIVITY_SHEET}'!A2:I500`);
+  const range = encodeURIComponent(`'${ACTIVITY_SHEET}'!A2:K500`);
   const response = await auth.request<{ values?: unknown[][] }>({
     url: `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}`,
   });
@@ -78,14 +78,15 @@ export async function syncGoogleEvents(): Promise<GoogleEventSyncResult> {
       const upsert = await client.query<{ inserted: boolean }>(
         `INSERT INTO events (
           title, event_date, location, description, max_participants,
-          allow_brand_exposure, is_published, registration_deadline, source_ref
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+          allow_brand_exposure, is_published, registration_deadline, signup_url, source_ref
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
         ON CONFLICT (source_ref) WHERE source_ref IS NOT NULL DO UPDATE SET
           title=EXCLUDED.title, event_date=EXCLUDED.event_date, location=EXCLUDED.location,
           description=EXCLUDED.description, max_participants=EXCLUDED.max_participants,
           allow_brand_exposure=EXCLUDED.allow_brand_exposure,
           is_published=EXCLUDED.is_published,
-          registration_deadline=EXCLUDED.registration_deadline, updated_at=NOW()
+          registration_deadline=EXCLUDED.registration_deadline,
+          signup_url=EXCLUDED.signup_url, updated_at=NOW()
         RETURNING (xmax = 0) AS inserted`,
         [
           title,
@@ -96,6 +97,7 @@ export async function syncGoogleEvents(): Promise<GoogleEventSyncResult> {
           parseBoolean(row[6]),
           String(row[7] ?? "").trim() === "上架",
           registrationDeadline,
+          String(row[10] ?? "").trim() || null,
           sourceRef,
         ]
       );

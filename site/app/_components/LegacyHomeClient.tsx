@@ -121,7 +121,7 @@ export function LegacyHomeClient() {
   }, []);
 
   return (
-    <div className="bg-[#0A0A0A] text-white selection:bg-[#CFFF1A] selection:text-black">
+    <div className="max-w-full overflow-x-clip bg-[#0A0A0A] text-white selection:bg-[#CFFF1A] selection:text-black">
       <motion.div
         className="fixed left-0 top-18 z-40 h-[3px] w-full origin-left bg-[#CFFF1A]"
         style={{ scaleX: progress }}
@@ -130,14 +130,14 @@ export function LegacyHomeClient() {
       {/* 1. Hero：能量入口 */}
       <section className="relative isolate min-h-[78vh] overflow-hidden px-6 pb-24 pt-28 md:pt-36">
         <motion.div
-          className="pointer-events-none absolute inset-0 -z-10"
+          className="pointer-events-none absolute inset-0 -z-10 max-w-full overflow-hidden"
           style={{ y: heroY }}
         >
           <Image
             src="/campaign/hyrox-silhouette.svg"
             alt=""
             fill
-            className="object-cover opacity-45 blur-2xl scale-110"
+            className="max-w-full object-cover opacity-45 blur-2xl scale-105 md:scale-110"
             priority
           />
           <div className="absolute inset-0 bg-gradient-to-b from-[#00332B] via-[#00332B]/85 to-[#0A0A0A]" />
