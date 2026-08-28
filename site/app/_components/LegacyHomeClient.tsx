@@ -205,7 +205,7 @@ export function LegacyHomeClient() {
               整合平台 / 信任中樞
             </h3>
             <p className="text-base leading-relaxed text-gray-400 md:text-lg">
-              盛家健康發展協會由理事長 Peeta 帶領，透過數據化平台整合運動與健康產業資源，
+              盛家健康發展協會透過數據化平台整合運動與健康產業資源，
               讓創作者影響力、品牌合作與實體活動轉化為可持續的商業價值。
             </p>
             <div className="mt-8 flex flex-wrap gap-8 md:mt-10 md:gap-12">
