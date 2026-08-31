@@ -1,146 +1,87 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ApiError, api, STATUS_LABELS } from "@/lib/api";
+import { ApiError, api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import type { Campaign, CampaignApplication } from "@/lib/types";
+import type { SponsorshipOpportunity } from "@/lib/types";
 import { DashboardShell, PageHeader, Card, Button, Badge, EmptyState } from "@/components/DashboardShell";
-import { BRAND_NAV, formatDate } from "@/lib/nav";
+import { BRAND_NAV } from "@/lib/nav";
 
-export default function BrandCampaignsPage() {
+function dateRange(item: SponsorshipOpportunity) {
+  const format = (value: string) => value.slice(0, 10).replaceAll("-", ".");
+  return `${format(item.start_date)}—${format(item.end_date)}`;
+}
+
+export default function BrandSponsorshipsPage() {
   const { token } = useAuth();
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [applications, setApplications] = useState<Record<string, CampaignApplication[]>>({});
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [opportunities, setOpportunities] = useState<SponsorshipOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState<string | null>(null);
+  const [message, setMessage] = useState("");
 
-  async function loadCampaigns() {
-    const data = await api<{ campaigns: Campaign[] }>("/api/campaigns", { token });
-    setCampaigns(data.campaigns);
+  async function load() {
+    const data = await api<{ opportunities: SponsorshipOpportunity[] }>("/api/sponsorships", { token });
+    setOpportunities(data.opportunities);
   }
 
   useEffect(() => {
-    loadCampaigns()
-      .catch(() => setCampaigns([]))
-      .finally(() => setLoading(false));
+    load().catch(() => setOpportunities([])).finally(() => setLoading(false));
   }, [token]);
 
-  async function toggleApplications(campaignId: string) {
-    if (expandedId === campaignId) {
-      setExpandedId(null);
-      return;
-    }
-    setExpandedId(campaignId);
-    if (applications[campaignId]) return;
+  async function expressInterest(slug: string) {
+    setSubmitting(slug);
+    setMessage("");
     try {
-      const data = await api<{ applications: CampaignApplication[] }>(
-        `/api/campaigns/${campaignId}/applications`,
-        { token }
-      );
-      setApplications((prev) => ({ ...prev, [campaignId]: data.applications }));
-    } catch {
-      setApplications((prev) => ({ ...prev, [campaignId]: [] }));
-    }
-  }
-
-  async function deleteCampaign(campaign: Campaign) {
-    const confirmed = window.confirm(
-      `確定要刪除「${campaign.title}」嗎？相關的 KOL 申請紀錄也會一併移除，此操作無法復原。`
-    );
-    if (!confirmed) return;
-
-    setError("");
-    setDeletingId(campaign.id);
-    try {
-      await api(`/api/campaigns/${campaign.id}`, { method: "DELETE", token });
-      setCampaigns((current) => current.filter((item) => item.id !== campaign.id));
-      setApplications((current) => {
-        const next = { ...current };
-        delete next[campaign.id];
-        return next;
+      const result = await api<{ message: string }>(`/api/sponsorships/${slug}/interest`, {
+        method: "POST",
+        token,
       });
-      if (expandedId === campaign.id) setExpandedId(null);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "刪除案件失敗，請稍後再試");
+      setMessage(result.message);
+      await load();
+    } catch (error) {
+      setMessage(error instanceof ApiError ? error.message : "送出失敗，請稍後再試");
     } finally {
-      setDeletingId(null);
+      setSubmitting(null);
     }
   }
 
   return (
     <DashboardShell role="brand" title="品牌方 Dashboard" nav={BRAND_NAV}>
       <PageHeader
-        title="發布合作案件"
-        description="提交合作需求，待協會審核通過後 KOL 可申請；通過審核的 KOL 申請將顯示於此。"
+        title="曝光／贊助機會"
+        description="查看協會近期企劃與贊助提案；有興趣的品牌可先閱讀簡報，再送出合作意向。"
       />
-      <div className="mb-6">
-        <Link href="/dashboard/brand/campaigns/new">
-          <Button>新增合作案件</Button>
-        </Link>
-      </div>
-      {error ? <p className="mb-4 text-sm font-semibold text-red-400">{error}</p> : null}
+      {message ? (
+        <p className="mb-5 rounded-xl bg-[#CFFF1A]/10 px-4 py-3 text-sm font-semibold text-[#CFFF1A]">{message}</p>
+      ) : null}
       {loading ? (
         <EmptyState message="載入中…" />
-      ) : campaigns.length === 0 ? (
-        <EmptyState message="尚無合作案件，點擊上方按鈕發布第一則。" />
+      ) : opportunities.length === 0 ? (
+        <EmptyState message="目前尚無公開的曝光／贊助機會" />
       ) : (
-        <div className="space-y-4">
-          {campaigns.map((c) => (
-            <Card key={c.id}>
-              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div>
-                  <h3 className="font-black">{c.title}</h3>
-                  <p className="text-sm text-[#CFFF1A]">{c.brand_name}</p>
-                  <p className="mt-2 text-sm text-gray-300">{c.content_description}</p>
-                  <p className="mt-2 text-xs text-gray-500">截止：{formatDate(c.application_deadline)}</p>
-                  <Badge
-                    tone={
-                      c.status === "approved"
-                        ? "success"
-                        : c.status === "pending_review"
-                          ? "warning"
-                          : "default"
-                    }
-                    className="mt-3"
-                  >
-                    {STATUS_LABELS[c.status] ?? c.status}
-                  </Badge>
-                </div>
-                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row md:justify-end">
-                  {c.status === "approved" ? (
-                    <Button variant="secondary" onClick={() => toggleApplications(c.id)}>
-                      {expandedId === c.id ? "收合申請者" : "查看通過審核的 KOL 申請"}
-                    </Button>
-                  ) : null}
-                  <Button
-                    variant="danger"
-                    disabled={deletingId === c.id}
-                    onClick={() => deleteCampaign(c)}
-                  >
-                    {deletingId === c.id ? "刪除中…" : "刪除案件"}
-                  </Button>
-                </div>
+        <div className="grid gap-5 xl:grid-cols-2">
+          {opportunities.map((item) => (
+            <Card key={item.slug} className="flex h-full flex-col border-white/10 p-6 md:p-8">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <Badge tone="success">開放合作</Badge>
+                <p className="text-sm font-black tracking-wide text-[#CFFF1A]">{dateRange(item)}</p>
               </div>
-              {expandedId === c.id ? (
-                <div className="mt-4 border-t border-white/10 pt-4">
-                  {(applications[c.id] ?? []).length === 0 ? (
-                    <p className="text-sm text-gray-400">尚無通過審核的 KOL 申請</p>
-                  ) : (
-                    <ul className="space-y-3">
-                      {(applications[c.id] ?? []).map((app) => (
-                        <li key={app.id} className="rounded-lg border border-white/10 p-3 text-sm">
-                          <p className="font-semibold text-[#CFFF1A]">{app.kol_name ?? "KOL"}</p>
-                          {app.kol_email ? <p className="text-gray-400">{app.kol_email}</p> : null}
-                          {app.message ? <p className="mt-1 text-gray-300">{app.message}</p> : null}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              ) : null}
+              <h2 className="mt-5 text-xl font-black leading-snug text-white md:text-2xl">{item.title}</h2>
+              <p className="mt-3 text-sm leading-relaxed text-gray-400">
+                歡迎有興趣的品牌查看完整贊助合作提案，協會將依合作需求安排後續洽談。
+              </p>
+              <div className="mt-8 flex flex-1 flex-col justify-end gap-3 sm:flex-row">
+                <a href={item.deck_url} target="_blank" rel="noreferrer" className="sm:flex-1">
+                  <Button variant="secondary" className="w-full">查看贊助合作簡報 ↗</Button>
+                </a>
+                <Button
+                  className="sm:flex-1"
+                  disabled={item.interested || submitting === item.slug}
+                  onClick={() => expressInterest(item.slug)}
+                >
+                  {item.interested ? "已登記興趣" : submitting === item.slug ? "送出中…" : "我有興趣"}
+                </Button>
+              </div>
             </Card>
           ))}
         </div>

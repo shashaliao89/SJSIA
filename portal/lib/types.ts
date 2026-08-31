@@ -91,6 +91,28 @@ export interface ContactRequest {
   from_kol_name?: string;
 }
 
+export interface SponsorshipOpportunity {
+  slug: string;
+  title: string;
+  start_date: string;
+  end_date: string;
+  deck_url: string;
+  interested: boolean;
+}
+
+export interface SponsorshipInterest {
+  id: string;
+  opportunity_slug: string;
+  opportunity_title: string;
+  start_date: string;
+  end_date: string;
+  from_email: string;
+  from_brand_name?: string;
+  status: string;
+  admin_read: boolean;
+  created_at: string;
+}
+
 export interface Product {
   id: string;
   brand_user_id: string;

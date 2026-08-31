@@ -238,3 +238,32 @@ CREATE TABLE IF NOT EXISTS contact_requests (
 );
 
 CREATE INDEX IF NOT EXISTS idx_contact_requests_admin_read ON contact_requests(admin_read);
+
+CREATE TABLE IF NOT EXISTS sponsorship_opportunities (
+  slug VARCHAR(100) PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  deck_url VARCHAR(1000) NOT NULL,
+  is_published BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS sponsorship_interests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  opportunity_slug VARCHAR(100) NOT NULL REFERENCES sponsorship_opportunities(slug) ON DELETE CASCADE,
+  brand_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  admin_read BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (opportunity_slug, brand_user_id)
+);
+
+INSERT INTO sponsorship_opportunities (slug, title, start_date, end_date, deck_url)
+VALUES
+  ('troy-peeta-bohol-2026', 'TROY × PEETA 薄荷島潛水旅遊團｜贊助合作提案', '2026-11-30', '2026-12-05', 'https://docs.google.com/presentation/d/1tUOmxEn8Y7Ewltz1nwleOOmsqnGbuMKPNXFY6fZuXVI/edit?usp=sharing'),
+  ('peeta-emily-bali-2026', 'Peeta＆Emily 峇里島健身旅遊團｜贊助合作提案', '2026-10-24', '2026-10-28', 'https://docs.google.com/presentation/d/1tiQQjnD0cCSKGlCvdDozxTEZjuQaUF6C9B-uypN0fVQ/edit?slide=id.g3dbdd4161c8_0_164#slide=id.g3dbdd4161c8_0_164')
+ON CONFLICT (slug) DO UPDATE SET title=EXCLUDED.title, start_date=EXCLUDED.start_date,
+  end_date=EXCLUDED.end_date, deck_url=EXCLUDED.deck_url, updated_at=NOW();

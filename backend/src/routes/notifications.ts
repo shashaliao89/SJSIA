@@ -30,13 +30,34 @@ router.get("/", requireAuth, requireRole("admin"), async (_req, res) => {
      ORDER BY ca.created_at DESC`
   );
 
+  const sponsorshipInterests = await pool.query(
+    `SELECT si.*, so.title AS opportunity_title, so.start_date, so.end_date,
+       u.email AS from_email, bp.brand_name AS from_brand_name
+     FROM sponsorship_interests si
+     JOIN sponsorship_opportunities so ON so.slug=si.opportunity_slug
+     JOIN users u ON u.id=si.brand_user_id
+     LEFT JOIN brand_profiles bp ON bp.user_id=si.brand_user_id
+     ORDER BY si.created_at DESC`
+  );
+
   const unreadContacts = contacts.rows.filter((r) => !r.admin_read).length;
 
   res.json({
     contact_requests: contacts.rows,
     pending_applications: applications.rows,
-    unread_count: unreadContacts + applications.rows.length,
+    sponsorship_interests: sponsorshipInterests.rows,
+    unread_count: unreadContacts + applications.rows.length + sponsorshipInterests.rows.filter((r) => !r.admin_read).length,
   });
+});
+
+router.patch("/sponsorship/:id/handled", requireAuth, requireRole("admin"), async (req, res) => {
+  const result = await pool.query(
+    `UPDATE sponsorship_interests SET status='handled', admin_read=true, updated_at=NOW()
+     WHERE id=$1 RETURNING *`,
+    [req.params.id]
+  );
+  if (!result.rows.length) return res.status(404).json({ error: "找不到通知" });
+  res.json({ interest: result.rows[0] });
 });
 
 router.patch("/contact/:id/read", requireAuth, requireRole("admin"), async (req, res) => {

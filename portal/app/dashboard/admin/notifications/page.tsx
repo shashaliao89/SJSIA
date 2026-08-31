@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { ApiError, api, STATUS_LABELS } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import type { ContactRequest, CampaignApplication } from "@/lib/types";
+import type { ContactRequest, CampaignApplication, SponsorshipInterest } from "@/lib/types";
 import { DashboardShell, PageHeader, Card, Button, Badge, EmptyState } from "@/components/DashboardShell";
 import { ADMIN_NAV, formatDateTime } from "@/lib/nav";
 
@@ -11,15 +11,18 @@ export default function AdminNotificationsPage() {
   const { token } = useAuth();
   const [contacts, setContacts] = useState<ContactRequest[]>([]);
   const [applications, setApplications] = useState<CampaignApplication[]>([]);
+  const [sponsorshipInterests, setSponsorshipInterests] = useState<SponsorshipInterest[]>([]);
   const [loading, setLoading] = useState(true);
 
   async function load() {
     const data = await api<{
       contact_requests: ContactRequest[];
       pending_applications: CampaignApplication[];
+      sponsorship_interests: SponsorshipInterest[];
     }>("/api/notifications", { token });
     setContacts(data.contact_requests);
     setApplications(data.pending_applications);
+    setSponsorshipInterests(data.sponsorship_interests);
   }
 
   useEffect(() => {
@@ -27,6 +30,7 @@ export default function AdminNotificationsPage() {
       .catch(() => {
         setContacts([]);
         setApplications([]);
+        setSponsorshipInterests([]);
       })
       .finally(() => setLoading(false));
   }, [token]);
@@ -54,6 +58,11 @@ export default function AdminNotificationsPage() {
     }
   }
 
+  async function handleSponsorshipInterest(id: string) {
+    await api(`/api/notifications/sponsorship/${id}/handled`, { method: "PATCH", token });
+    await load();
+  }
+
   const pendingContacts = contacts.filter((c) => c.status === "pending");
 
   return (
@@ -66,6 +75,34 @@ export default function AdminNotificationsPage() {
         <EmptyState message="載入中…" />
       ) : (
         <div className="space-y-8">
+          <section>
+            <h2 className="mb-4 text-lg font-black text-[#CFFF1A]">
+              贊助合作意向 {sponsorshipInterests.filter((item) => item.status === "pending").length > 0
+                ? `(${sponsorshipInterests.filter((item) => item.status === "pending").length})`
+                : ""}
+            </h2>
+            {sponsorshipInterests.filter((item) => item.status === "pending").length === 0 ? (
+              <EmptyState message="目前無待處理的贊助合作意向" />
+            ) : (
+              <div className="space-y-4">
+                {sponsorshipInterests.filter((item) => item.status === "pending").map((item) => (
+                  <Card key={item.id} className={!item.admin_read ? "border-[#CFFF1A]/40" : undefined}>
+                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                      <div>
+                        <Badge tone="success" className="mb-2">品牌贊助意向</Badge>
+                        <p className="font-semibold">
+                          {item.from_brand_name ?? item.from_email} 對「{item.opportunity_title}」有興趣
+                        </p>
+                        <p className="mt-1 text-sm text-gray-400">{item.from_email}</p>
+                        <p className="mt-2 text-xs text-gray-500">{formatDateTime(item.created_at)}</p>
+                      </div>
+                      <Button onClick={() => handleSponsorshipInterest(item.id)}>標記已處理</Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </section>
           <section>
             <h2 className="mb-4 text-lg font-black text-[#CFFF1A]">
               洽談申請 {pendingContacts.length > 0 ? `(${pendingContacts.length})` : ""}

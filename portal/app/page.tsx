@@ -41,7 +41,7 @@ export default function HomePage() {
 
         <div className="mt-12 grid gap-6 md:grid-cols-3">
           {[
-            { title: "品牌方 / 企業會員", desc: "瀏覽 KOL 資料庫、發布合作案件、報名協會活動。" },
+            { title: "品牌方 / 企業會員", desc: "瀏覽 KOL 資料庫、查看曝光與贊助機會、報名協會活動。" },
             { title: "KOL / 個人會員", desc: "瀏覽品牌資料庫、申請合作機會、報名協會活動。" },
             { title: "協會管理員", desc: "媒合通知、審核會員、管理 KOL 與合作案件、舉辦活動。" },
           ].map((item) => (

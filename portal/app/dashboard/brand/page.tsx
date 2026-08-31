@@ -34,7 +34,7 @@ export default function BrandDashboardPage() {
 
   return (
     <DashboardShell role="brand" title="品牌會員中心" nav={BRAND_NAV}>
-      <PageHeader title={`歡迎回來${brandName ? `，${brandName}` : ""}`} description="掌握合作案件進度、探索合適 KOL，並參與協會活動。" />
+      <PageHeader title={`歡迎回來${brandName ? `，${brandName}` : ""}`} description="探索曝光與贊助機會、認識合適 KOL，並參與協會活動。" />
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:gap-4">
         <StatCard label="可聯繫 KOL" value={loaded ? kols.length : "—"} tone="accent" />
         <StatCard label="審核中案件" value={loaded ? pending : "—"} tone={pending ? "warning" : "default"} />
@@ -43,7 +43,7 @@ export default function BrandDashboardPage() {
       </div>
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         <QuickLinkCard href="/dashboard/brand/kols" title="探索 KOL 資料庫" description="依粉絲級距篩選協會創作者，查看 IG 並提交合作洽談需求。" action="瀏覽 KOL" />
-        <QuickLinkCard href="/dashboard/brand/campaigns" title="管理合作案件" description="發布新的合作需求，並追蹤協會審核與 KOL 申請結果。" action="查看案件" />
+        <QuickLinkCard href="/dashboard/brand/campaigns" title="曝光／贊助機會" description="查看協會近期合作企劃與完整贊助提案。" action="查看機會" />
         <QuickLinkCard href="/dashboard/brand/events" title="協會活動" description="查看近期會員活動、完成報名或申請品牌露出。" action="查看活動" />
         <QuickLinkCard href="/dashboard/brand/profile" title="品牌基本資料" description="保持品牌介紹與聯絡資訊完整，提升媒合效率。" action="編輯資料" />
       </div>
