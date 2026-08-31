@@ -1,10 +1,16 @@
 import { Router } from "express";
 import { pool } from "../db/pool.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { syncGoogleSponsorshipsIfDue } from "../lib/google-sponsorships.js";
 
 const router = Router();
 
 router.get("/", requireAuth, requireRole("admin"), async (_req, res) => {
+  try {
+    await syncGoogleSponsorshipsIfDue();
+  } catch (error) {
+    console.error("Google sponsorship sync failed:", error instanceof Error ? error.message : error);
+  }
   const contacts = await pool.query(
     `SELECT cr.*,
        u.email AS from_email, u.role AS from_role,
