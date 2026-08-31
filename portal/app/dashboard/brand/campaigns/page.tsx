@@ -45,6 +45,23 @@ export default function BrandSponsorshipsPage() {
     }
   }
 
+  async function cancelInterest(slug: string) {
+    setSubmitting(slug);
+    setMessage("");
+    try {
+      const result = await api<{ message: string }>(`/api/sponsorships/${slug}/interest`, {
+        method: "DELETE",
+        token,
+      });
+      setMessage(result.message);
+      await load();
+    } catch (error) {
+      setMessage(error instanceof ApiError ? error.message : "取消失敗，請稍後再試");
+    } finally {
+      setSubmitting(null);
+    }
+  }
+
   return (
     <DashboardShell role="brand" title="品牌方 Dashboard" nav={BRAND_NAV}>
       <PageHeader
@@ -76,10 +93,13 @@ export default function BrandSponsorshipsPage() {
                 </a>
                 <Button
                   className="sm:flex-1"
-                  disabled={item.interested || submitting === item.slug}
-                  onClick={() => expressInterest(item.slug)}
+                  variant={item.interested ? "secondary" : undefined}
+                  disabled={submitting === item.slug}
+                  onClick={() => item.interested ? cancelInterest(item.slug) : expressInterest(item.slug)}
                 >
-                  {item.interested ? "已登記興趣" : submitting === item.slug ? "送出中…" : "我有興趣"}
+                  {submitting === item.slug
+                    ? item.interested ? "取消中…" : "送出中…"
+                    : item.interested ? "取消興趣" : "我有興趣"}
                 </Button>
               </div>
             </Card>

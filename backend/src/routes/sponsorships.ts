@@ -36,4 +36,15 @@ router.post("/:slug/interest", requireAuth, requireRole("brand"), requireApprove
   res.json({ ok: true, message: "已送出興趣登記，協會將與您聯繫" });
 });
 
+router.delete("/:slug/interest", requireAuth, requireRole("brand"), requireApproved, async (req, res) => {
+  const result = await pool.query(
+    `DELETE FROM sponsorship_interests
+     WHERE opportunity_slug=$1 AND brand_user_id=$2
+     RETURNING id`,
+    [req.params.slug, req.user!.id]
+  );
+  if (!result.rows.length) return res.status(404).json({ error: "目前沒有這筆興趣登記" });
+  res.json({ ok: true, message: "已取消興趣登記" });
+});
+
 export default router;
