@@ -2,12 +2,18 @@ import { Router } from "express";
 import { z } from "zod";
 import { pool } from "../db/pool.js";
 import { requireAuth, requireRole, requireApproved } from "../middleware/auth.js";
+import { syncOrganizedMembersIfDue } from "../db/sync-organized-members.js";
 
 const router = Router();
 
 router.use(requireAuth, requireRole("admin"));
 
 router.get("/", async (_req, res) => {
+  try {
+    await syncOrganizedMembersIfDue();
+  } catch (error) {
+    console.error("Failed to sync organized member sheets:", error);
+  }
   const registered = await pool.query(
     `SELECT u.id, u.email, u.role, u.status, u.membership_expires_at, u.created_at,
             bp.brand_name, kp.name AS kol_name

@@ -4,6 +4,7 @@ import { JWT } from "google-auth-library";
 import { pool } from "../db/pool.js";
 import { requireAuth, requireRole, requireApproved } from "../middleware/auth.js";
 import { GOOGLE_PERSONAL_MEMBER_SHEET, googleFormSourceRef } from "../lib/google-sheet-names.js";
+import { syncOrganizedMembersIfDue } from "../db/sync-organized-members.js";
 
 const router = Router();
 
@@ -58,6 +59,11 @@ const kolSchema = z.object({
 });
 
 router.get("/", requireAuth, requireApproved, async (req, res) => {
+  try {
+    await syncOrganizedMembersIfDue();
+  } catch (error) {
+    console.error("Failed to sync organized member sheets:", error);
+  }
   if (req.user!.role === "admin") {
     const result = await pool.query(
       `SELECT *,
