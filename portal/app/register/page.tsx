@@ -17,6 +17,7 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function sendCode() {
     setError("");
@@ -89,7 +90,12 @@ export default function RegisterPage() {
         </div>
         <div>
           <label htmlFor="password">設定密碼（至少 8 碼）</label>
-          <input id="password" type="password" minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} />
+          <div className="relative">
+            <input id="password" type={showPassword ? "text" : "password"} minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} className="pr-12" />
+            <button type="button" onClick={() => setShowPassword((visible) => !visible)} className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-gray-400 hover:text-white" aria-label={showPassword ? "隱藏密碼" : "顯示密碼"} aria-pressed={showPassword}>
+              {showPassword ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M3 3l18 18M10.6 10.6a2 2 0 002.8 2.8M9.9 4.2A10.8 10.8 0 0112 4c5.5 0 9 5 9 5a17 17 0 01-3 3.5M6.2 6.2C4.2 7.5 3 9 3 9s3.5 5 9 5c1.2 0 2.3-.2 3.3-.6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg> : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M3 12s3.5-5 9-5 9 5 9 5-3.5 5-9 5-9-5-9-5z" stroke="currentColor" strokeWidth="2"/><circle cx="12" cy="12" r="2.5" stroke="currentColor" strokeWidth="2"/></svg>}
+            </button>
+          </div>
         </div>
         {message ? <p className="text-sm font-semibold text-[#CFFF1A]">{message}</p> : null}
         {error ? <p className="text-sm font-semibold text-red-400">{error}</p> : null}

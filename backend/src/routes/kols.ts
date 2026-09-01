@@ -92,17 +92,21 @@ router.get("/", requireAuth, requireApproved, async (req, res) => {
   }
   if (req.user!.role === "brand") {
     const result = await pool.query(
-      `SELECT id, name, ig_url, youtube_url, tiktok_url, follower_count,
+      `SELECT kp.id, kp.name, kp.ig_url, kp.youtube_url, kp.tiktok_url, kp.follower_count,
         audience_profile, content_types, collaboration_types, past_cases,
-        open_to_contact, is_public,
+        open_to_contact, is_public, avatar_url, gender,
+        (c.id IS NOT NULL) AS contacted, c.id AS conversation_id,
         CASE
           WHEN follower_count < 10000 THEN 'under_10k'
           WHEN follower_count < 100000 THEN '10k_to_100k'
           ELSE 'over_100k'
         END AS follower_tier
-       FROM kol_profiles
-       WHERE is_public = true AND ig_url ~* '^https?://'
-       ORDER BY follower_count DESC NULLS LAST, name ASC`
+       FROM kol_profiles kp
+       LEFT JOIN conversations c ON c.brand_user_id=$1 AND c.target_kol_id=kp.id
+         AND c.conversation_type='kol_contact'
+       WHERE kp.is_public = true AND kp.ig_url ~* '^https?://'
+       ORDER BY kp.follower_count DESC NULLS LAST, kp.name ASC`,
+      [req.user!.id]
     );
     return res.json({ kols: result.rows });
   }
@@ -250,13 +254,36 @@ router.post("/:id/contact", requireAuth, requireRole("brand"), requireApproved, 
     return res.status(400).json({ error: "此 KOL 目前不開放聯繫" });
   }
 
-  await pool.query(
-    `INSERT INTO contact_requests (from_user_id, target_type, target_profile_id, message)
-     VALUES ($1, 'kol', $2, $3)`,
-    [req.user!.id, req.params.id, message ?? "希望進一步洽談合作"]
-  );
-
-  res.json({ ok: true, message: "洽談申請已送出，協會將協助媒合" });
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const conversation = await client.query<{ id: string; inserted: boolean }>(
+      `INSERT INTO conversations (brand_user_id, conversation_type, title, target_kol_id)
+       VALUES ($1,'kol_contact',$2,$3)
+       ON CONFLICT (brand_user_id, target_kol_id)
+         WHERE conversation_type='kol_contact' AND target_kol_id IS NOT NULL
+       DO UPDATE SET updated_at=NOW()
+       RETURNING id, (xmax=0) AS inserted`,
+      [req.user!.id, `洽談：${kol.rows[0].name}`, req.params.id]
+    );
+    if (conversation.rows[0].inserted) {
+      await client.query(
+        `INSERT INTO conversation_messages (conversation_id, sender_user_id, body) VALUES ($1,$2,$3)`,
+        [conversation.rows[0].id, req.user!.id, String(message ?? "希望進一步洽談合作").slice(0, 4000)]
+      );
+    }
+    await client.query("COMMIT");
+    res.json({
+      ok: true,
+      conversation_id: conversation.rows[0].id,
+      message: conversation.rows[0].inserted ? "洽談案件已建立" : "已開啟既有洽談紀錄",
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 });
 
 export default router;

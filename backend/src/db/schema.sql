@@ -81,6 +81,8 @@ CREATE TABLE IF NOT EXISTS kol_profiles (
   membership_tag VARCHAR(50),
   data_check VARCHAR(100),
   source_ref VARCHAR(255),
+  avatar_url VARCHAR(1000),
+  gender VARCHAR(20),
   past_cases TEXT,
   open_to_contact BOOLEAN NOT NULL DEFAULT true,
   is_public BOOLEAN NOT NULL DEFAULT true,
@@ -214,6 +216,8 @@ ALTER TABLE kol_profiles ADD COLUMN IF NOT EXISTS boarding_status VARCHAR(100);
 ALTER TABLE kol_profiles ADD COLUMN IF NOT EXISTS membership_tag VARCHAR(50);
 ALTER TABLE kol_profiles ADD COLUMN IF NOT EXISTS data_check VARCHAR(100);
 ALTER TABLE kol_profiles ADD COLUMN IF NOT EXISTS source_ref VARCHAR(255);
+ALTER TABLE kol_profiles ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(1000);
+ALTER TABLE kol_profiles ADD COLUMN IF NOT EXISTS gender VARCHAR(20);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_kol_profiles_source_ref
   ON kol_profiles(source_ref) WHERE source_ref IS NOT NULL;
 
@@ -267,3 +271,69 @@ VALUES
   ('peeta-emily-bali-2026', 'Peeta＆Emily 峇里島健身旅遊團｜贊助合作提案', '2026-10-24', '2026-10-28', 'https://docs.google.com/presentation/d/1tiQQjnD0cCSKGlCvdDozxTEZjuQaUF6C9B-uypN0fVQ/edit?slide=id.g3dbdd4161c8_0_164#slide=id.g3dbdd4161c8_0_164')
 ON CONFLICT (slug) DO UPDATE SET title=EXCLUDED.title, start_date=EXCLUDED.start_date,
   end_date=EXCLUDED.end_date, deck_url=EXCLUDED.deck_url, updated_at=NOW();
+
+CREATE TABLE IF NOT EXISTS conversations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  brand_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  conversation_type VARCHAR(40) NOT NULL CHECK (conversation_type IN (
+    'kol_contact', 'marketing_request', 'commercial_opportunity',
+    'sponsorship_seek', 'sponsorship_offer'
+  )),
+  title VARCHAR(255) NOT NULL,
+  target_kol_id UUID REFERENCES kol_profiles(id) ON DELETE SET NULL,
+  opportunity_slug VARCHAR(100) REFERENCES sponsorship_opportunities(slug) ON DELETE SET NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'closed')),
+  withdrawn BOOLEAN NOT NULL DEFAULT false,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  last_message_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_conversations_brand_kol
+  ON conversations(brand_user_id, target_kol_id)
+  WHERE conversation_type='kol_contact' AND target_kol_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_conversations_brand_opportunity
+  ON conversations(brand_user_id, opportunity_slug)
+  WHERE conversation_type='commercial_opportunity' AND opportunity_slug IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_conversations_brand ON conversations(brand_user_id, last_message_at DESC);
+CREATE INDEX IF NOT EXISTS idx_conversations_status ON conversations(status, last_message_at DESC);
+
+CREATE TABLE IF NOT EXISTS conversation_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  sender_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  body TEXT NOT NULL CHECK (char_length(body) BETWEEN 1 AND 4000),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_conversation_messages_thread
+  ON conversation_messages(conversation_id, created_at ASC);
+
+CREATE TABLE IF NOT EXISTS conversation_reads (
+  conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  last_read_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (conversation_id, user_id)
+);
+
+-- Preserve existing brand-to-KOL contact history in the unified inbox.
+INSERT INTO conversations (brand_user_id, conversation_type, title, target_kol_id, status, last_message_at, created_at)
+SELECT cr.from_user_id, 'kol_contact', '洽談：' || kp.name, kp.id,
+  CASE WHEN cr.status='handled' THEN 'closed' ELSE 'pending' END,
+  cr.created_at, cr.created_at
+FROM contact_requests cr
+JOIN users u ON u.id=cr.from_user_id AND u.role='brand'
+JOIN kol_profiles kp ON cr.target_type='kol' AND kp.id=cr.target_profile_id
+ON CONFLICT (brand_user_id, target_kol_id) WHERE conversation_type='kol_contact' AND target_kol_id IS NOT NULL
+DO NOTHING;
+
+INSERT INTO conversation_messages (conversation_id, sender_user_id, body, created_at)
+SELECT c.id, cr.from_user_id, COALESCE(NULLIF(cr.message, ''), '希望進一步洽談合作'), cr.created_at
+FROM contact_requests cr
+JOIN conversations c ON c.brand_user_id=cr.from_user_id
+  AND c.target_kol_id=cr.target_profile_id AND c.conversation_type='kol_contact'
+WHERE cr.target_type='kol'
+  AND NOT EXISTS (
+    SELECT 1 FROM conversation_messages cm
+    WHERE cm.conversation_id=c.id AND cm.sender_user_id=cr.from_user_id AND cm.created_at=cr.created_at
+  );

@@ -1,182 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ApiError, api, STATUS_LABELS } from "@/lib/api";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ApiError, api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import type { ContactRequest, CampaignApplication, SponsorshipInterest } from "@/lib/types";
-import { DashboardShell, PageHeader, Card, Button, Badge, EmptyState } from "@/components/DashboardShell";
-import { ADMIN_NAV, formatDateTime } from "@/lib/nav";
+import type { CampaignApplication, Conversation } from "@/lib/types";
+import { DashboardShell, PageHeader, Card, Badge, Button, EmptyState } from "@/components/DashboardShell";
+import { ConversationModal } from "@/components/ConversationModal";
+import { ADMIN_NAV } from "@/lib/nav";
 
-export default function AdminNotificationsPage() {
-  const { token } = useAuth();
-  const [contacts, setContacts] = useState<ContactRequest[]>([]);
-  const [applications, setApplications] = useState<CampaignApplication[]>([]);
-  const [sponsorshipInterests, setSponsorshipInterests] = useState<SponsorshipInterest[]>([]);
-  const [loading, setLoading] = useState(true);
+const types=[{key:"all",label:"全部"},{key:"kol_contact",label:"KOL 洽談"},{key:"marketing_request",label:"行銷需求"},{key:"commercial_opportunity",label:"商業提案"},{key:"sponsorship_seek",label:"尋求贊助"},{key:"sponsorship_offer",label:"提供贊助"}];
+const statuses=[{key:"all",label:"全部狀態"},{key:"pending",label:"待處理"},{key:"in_progress",label:"進行中"},{key:"closed",label:"已結案"}];
+const typeLabel=Object.fromEntries(types.map(item=>[item.key,item.label])); const statusLabel=Object.fromEntries(statuses.map(item=>[item.key,item.label]));
 
-  async function load() {
-    const data = await api<{
-      contact_requests: ContactRequest[];
-      pending_applications: CampaignApplication[];
-      sponsorship_interests: SponsorshipInterest[];
-    }>("/api/notifications", { token });
-    setContacts(data.contact_requests);
-    setApplications(data.pending_applications);
-    setSponsorshipInterests(data.sponsorship_interests);
-  }
-
-  useEffect(() => {
-    load()
-      .catch(() => {
-        setContacts([]);
-        setApplications([]);
-        setSponsorshipInterests([]);
-      })
-      .finally(() => setLoading(false));
-  }, [token]);
-
-  async function markContactRead(id: string) {
-    await api(`/api/notifications/contact/${id}/read`, { method: "PATCH", token });
-    await load();
-  }
-
-  async function markContactHandled(id: string) {
-    await api(`/api/notifications/contact/${id}/handled`, { method: "PATCH", token });
-    await load();
-  }
-
-  async function reviewApplication(id: string, status: "approved" | "rejected") {
-    try {
-      await api(`/api/campaigns/applications/${id}`, {
-        method: "PATCH",
-        token,
-        body: JSON.stringify({ status }),
-      });
-      await load();
-    } catch (err) {
-      alert(err instanceof ApiError ? err.message : "審核失敗");
-    }
-  }
-
-  async function handleSponsorshipInterest(id: string) {
-    await api(`/api/notifications/sponsorship/${id}/handled`, { method: "PATCH", token });
-    await load();
-  }
-
-  const pendingContacts = contacts.filter((c) => c.status === "pending");
-
-  return (
-    <DashboardShell role="admin" title="Admin Dashboard" nav={ADMIN_NAV}>
-      <PageHeader
-        title="媒合通知"
-        description="品牌與 KOL 的洽談申請，以及 KOL 合作案件申請待審核項目。"
-      />
-      {loading ? (
-        <EmptyState message="載入中…" />
-      ) : (
-        <div className="space-y-8">
-          <section>
-            <h2 className="mb-4 text-lg font-black text-[#CFFF1A]">
-              贊助合作意向 {sponsorshipInterests.filter((item) => item.status === "pending").length > 0
-                ? `(${sponsorshipInterests.filter((item) => item.status === "pending").length})`
-                : ""}
-            </h2>
-            {sponsorshipInterests.filter((item) => item.status === "pending").length === 0 ? (
-              <EmptyState message="目前無待處理的贊助合作意向" />
-            ) : (
-              <div className="space-y-4">
-                {sponsorshipInterests.filter((item) => item.status === "pending").map((item) => (
-                  <Card key={item.id} className={!item.admin_read ? "border-[#CFFF1A]/40" : undefined}>
-                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                      <div>
-                        <Badge tone="success" className="mb-2">品牌贊助意向</Badge>
-                        <p className="font-semibold">
-                          {item.from_brand_name ?? item.from_email} 對「{item.opportunity_title}」有興趣
-                        </p>
-                        <p className="mt-1 text-sm text-gray-400">{item.from_email}</p>
-                        <p className="mt-2 text-xs text-gray-500">{formatDateTime(item.created_at)}</p>
-                      </div>
-                      <Button onClick={() => handleSponsorshipInterest(item.id)}>標記已處理</Button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </section>
-          <section>
-            <h2 className="mb-4 text-lg font-black text-[#CFFF1A]">
-              洽談申請 {pendingContacts.length > 0 ? `(${pendingContacts.length})` : ""}
-            </h2>
-            {pendingContacts.length === 0 ? (
-              <EmptyState message="目前無待處理的洽談申請" />
-            ) : (
-              <div className="space-y-4">
-                {pendingContacts.map((c) => (
-                  <Card key={c.id} className={!c.admin_read ? "border-[#CFFF1A]/40" : undefined}>
-                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                      <div>
-                        <Badge tone={c.target_type === "kol" ? "warning" : "success"} className="mb-2">
-                          {c.target_type === "kol" ? "品牌 → KOL" : "KOL → 品牌"}
-                        </Badge>
-                        <p className="font-semibold">
-                          {c.from_role === "brand"
-                            ? `${c.from_brand_name ?? c.from_email} 想聯繫 ${c.kol_name ?? "KOL"}`
-                            : `${c.from_kol_name ?? c.from_email} 想聯繫 ${c.target_brand_name ?? "品牌"}`}
-                        </p>
-                        <p className="mt-1 text-sm text-gray-400">{c.from_email}</p>
-                        {c.message ? <p className="mt-2 text-sm text-gray-300">{c.message}</p> : null}
-                        <p className="mt-2 text-xs text-gray-500">{formatDateTime(c.created_at)}</p>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {!c.admin_read ? (
-                          <Button variant="secondary" onClick={() => markContactRead(c.id)}>
-                            標記已讀
-                          </Button>
-                        ) : null}
-                        <Button onClick={() => markContactHandled(c.id)}>標記已處理</Button>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section>
-            <h2 className="mb-4 text-lg font-black text-[#CFFF1A]">
-              KOL 合作申請待審 {applications.length > 0 ? `(${applications.length})` : ""}
-            </h2>
-            {applications.length === 0 ? (
-              <EmptyState message="目前無待審核的合作申請" />
-            ) : (
-              <div className="space-y-4">
-                {applications.map((app) => (
-                  <Card key={app.id}>
-                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                      <div>
-                        <p className="font-semibold text-[#CFFF1A]">
-                          {app.kol_name ?? app.kol_email} 申請「{app.campaign_title}」
-                        </p>
-                        <p className="text-sm text-gray-400">{app.brand_name}</p>
-                        {app.message ? <p className="mt-2 text-sm text-gray-300">{app.message}</p> : null}
-                        <Badge tone="warning" className="mt-2">
-                          {STATUS_LABELS[app.status] ?? app.status}
-                        </Badge>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <Button onClick={() => reviewApplication(app.id, "approved")}>核准</Button>
-                        <Button variant="secondary" onClick={() => reviewApplication(app.id, "rejected")}>
-                          拒絕
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
-      )}
-    </DashboardShell>
-  );
+export default function AdminCaseCenter(){
+ const {token}=useAuth(); const [items,setItems]=useState<Conversation[]>([]); const [applications,setApplications]=useState<CampaignApplication[]>([]); const [loading,setLoading]=useState(true); const [type,setType]=useState("all"); const [status,setStatus]=useState("all"); const [selected,setSelected]=useState<Conversation|null>(null);
+ const load=useCallback(async()=>{const [d,n]=await Promise.all([api<{conversations:Conversation[]}>("/api/conversations?limit=50",{token}),api<{pending_applications:CampaignApplication[]}>("/api/notifications",{token})]);setItems(d.conversations);setApplications(n.pending_applications);},[token]);
+ useEffect(()=>{load().catch(()=>setItems([])).finally(()=>setLoading(false));const timer=setInterval(()=>load().catch(()=>undefined),5000);return()=>clearInterval(timer);},[load]);
+ const filtered=useMemo(()=>items.filter(item=>(type==="all"||item.conversation_type===type)&&(status==="all"||item.status===status)),[items,type,status]);
+ async function reviewApplication(id:string,decision:"approved"|"rejected"){try{await api(`/api/campaigns/applications/${id}`,{method:"PATCH",token,body:JSON.stringify({status:decision})});await load();}catch(error){alert(error instanceof ApiError?error.message:"審核失敗");}}
+ return <DashboardShell role="admin" title="協會管理後台" nav={ADMIN_NAV}><PageHeader title="案件中心" description="集中處理 KOL 洽談、品牌行銷需求、商業合作與贊助品媒合對話。"/><div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4"><div className="flex flex-wrap gap-2">{types.map(item=><Filter key={item.key} active={type===item.key} onClick={()=>setType(item.key)}>{item.label}<span className="ml-1 opacity-60">{item.key==="all"?items.length:items.filter(row=>row.conversation_type===item.key).length}</span></Filter>)}</div><div className="my-4 border-t border-white/10"/><div className="flex flex-wrap gap-2">{statuses.map(item=><Filter key={item.key} active={status===item.key} onClick={()=>setStatus(item.key)}>{item.label}</Filter>)}</div></div>{loading?<EmptyState message="載入案件中…"/>:filtered.length===0?<EmptyState message="目前沒有符合條件的案件"/>:<div className="space-y-3">{filtered.map(item=><button key={item.id} className="block w-full text-left" onClick={()=>setSelected(item)}><Card className={`transition hover:border-[#CFFF1A]/40 ${item.unread_count?"border-[#CFFF1A]/35":""}`}><div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"><div className="min-w-0"><div className="flex flex-wrap gap-2"><Badge>{typeLabel[item.conversation_type]}</Badge><Badge tone={item.status==="pending"?"warning":item.status==="in_progress"?"success":"default"}>{statusLabel[item.status]}</Badge>{item.unread_count?<Badge tone="danger">{item.unread_count} 未讀</Badge>:null}{item.withdrawn?<Badge tone="warning">已撤回</Badge>:null}</div><h3 className="mt-2 font-black">{item.title}</h3><p className="mt-1 text-sm text-gray-400">{item.brand_name||item.brand_email}{item.kol_name?` → ${item.kol_name}`:""}</p><p className="mt-2 line-clamp-1 text-sm text-gray-500">{item.last_message}</p></div><p className="shrink-0 text-xs text-gray-500">{new Date(item.last_message_at).toLocaleString("zh-TW")}</p></div></Card></button>)}</div>}<section className="mt-10"><h2 className="mb-4 text-lg font-black text-[#CFFF1A]">既有 KOL 合作申請 {applications.length?`(${applications.length})`:""}</h2>{applications.length===0?<EmptyState message="目前無待審核的 KOL 合作申請"/>:<div className="space-y-3">{applications.map(app=><Card key={app.id}><p className="font-black">{app.kol_name||app.kol_email} 申請「{app.campaign_title}」</p><p className="mt-1 text-sm text-gray-400">{app.brand_name}</p>{app.message?<p className="mt-2 text-sm text-gray-300">{app.message}</p>:null}<div className="mt-4 flex gap-2"><Button onClick={()=>reviewApplication(app.id,"approved")}>核准</Button><Button variant="secondary" onClick={()=>reviewApplication(app.id,"rejected")}>拒絕</Button></div></Card>)}</div>}</section>{selected?<ConversationModal conversation={selected} onClose={()=>setSelected(null)} onChanged={load}/>:null}</DashboardShell>;
 }
+function Filter({active,onClick,children}:{active:boolean;onClick:()=>void;children:React.ReactNode}){return <button onClick={onClick} className={`rounded-xl px-3.5 py-2 text-sm font-black ${active?"bg-[#CFFF1A] text-black":"border border-white/10 text-gray-300"}`}>{children}</button>}

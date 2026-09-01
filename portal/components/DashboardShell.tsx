@@ -59,6 +59,9 @@ export function DashboardShell({ role, title, nav, children }: DashboardShellPro
   const router = useRouter();
   const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const visibleNav = user?.role === "brand" && user.status !== "approved"
+    ? nav.filter((item) => item.href === "/dashboard/brand" || item.href === "/dashboard/brand/profile")
+    : nav;
 
   useEffect(() => {
     if (loading) return;
@@ -141,7 +144,7 @@ export function DashboardShell({ role, title, nav, children }: DashboardShellPro
         {/* 手機：橫向滑動快捷導覽 */}
         <div className="border-t border-white/10 px-4 pb-3 pt-2 lg:hidden">
           <NavLinks
-            nav={nav}
+            nav={visibleNav}
             pathname={pathname}
             className="flex gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             linkClassName={(active) =>
@@ -176,7 +179,7 @@ export function DashboardShell({ role, title, nav, children }: DashboardShellPro
         >
           <div className="flex h-full flex-col px-4 pb-6 pt-20">
             <NavLinks
-              nav={nav}
+              nav={visibleNav}
               pathname={pathname}
               onNavigate={() => setMobileNavOpen(false)}
               className="flex flex-col gap-2"
@@ -188,7 +191,7 @@ export function DashboardShell({ role, title, nav, children }: DashboardShellPro
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:grid lg:grid-cols-[220px_1fr] lg:gap-8">
         <aside className="hidden h-fit rounded-2xl border border-white/10 bg-white/[0.03] p-3 lg:block">
-          <NavLinks nav={nav} pathname={pathname} className="flex flex-col gap-1" />
+          <NavLinks nav={visibleNav} pathname={pathname} className="flex flex-col gap-1" />
         </aside>
         <main className="min-w-0">{children}</main>
       </div>

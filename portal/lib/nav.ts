@@ -1,7 +1,9 @@
 export const BRAND_NAV = [
   { href: "/dashboard/brand", label: "總覽" },
   { href: "/dashboard/brand/kols", label: "KOL 資料庫" },
-  { href: "/dashboard/brand/campaigns", label: "曝光／贊助機會" },
+  { href: "/dashboard/brand/campaigns", label: "商業合作機會" },
+  { href: "/dashboard/brand/sponsorships", label: "贊助品媒合" },
+  { href: "/dashboard/brand/conversations", label: "我的案件" },
   { href: "/dashboard/brand/events", label: "協會活動" },
   { href: "/dashboard/brand/profile", label: "品牌基本資料" },
 ];
@@ -19,7 +21,7 @@ export const ADMIN_NAV = [
   { href: "/dashboard/admin/kols", label: "KOL管理" },
   { href: "/dashboard/admin/campaigns", label: "品牌管理" },
   { href: "/dashboard/admin/events", label: "活動管理" },
-  { href: "/dashboard/admin/notifications", label: "媒合通知" },
+  { href: "/dashboard/admin/notifications", label: "案件中心" },
 ];
 
 export function formatDate(value: string | null | undefined) {

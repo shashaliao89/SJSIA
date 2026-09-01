@@ -78,17 +78,19 @@ export async function syncOrganizedMembers(): Promise<MemberSyncResult> {
       await client.query(
         `INSERT INTO kol_profiles (
           name, ig_url, follower_count, follower_count_raw, collaboration_price,
-          boarding_status, source_ref, data_check, content_types, open_to_contact, is_public
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,true,true)
+          boarding_status, source_ref, data_check, content_types, avatar_url, gender, open_to_contact, is_public
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,true,true)
         ON CONFLICT (source_ref) WHERE source_ref IS NOT NULL DO UPDATE SET
           name=EXCLUDED.name, ig_url=EXCLUDED.ig_url, follower_count=EXCLUDED.follower_count,
           follower_count_raw=EXCLUDED.follower_count_raw, collaboration_price=EXCLUDED.collaboration_price,
           boarding_status=EXCLUDED.boarding_status, data_check=EXCLUDED.data_check,
-          content_types=EXCLUDED.content_types, updated_at=NOW()`,
+          content_types=EXCLUDED.content_types, avatar_url=EXCLUDED.avatar_url,
+          gender=EXCLUDED.gender, updated_at=NOW()`,
         [
           row["IG 顯示名稱"], row["Instagram 連結"] || null, followerCount,
           row["粉絲數（原始）"] || null, row["合作報價"] || null,
           row["登船狀態／方案"] || null, sourceRef, row["IG 資料狀態"] || null, tags,
+          row["大頭照網址"] || null, row["性別"] || null,
         ]
       );
       await client.query(

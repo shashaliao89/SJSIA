@@ -30,6 +30,10 @@ export interface KolProfile {
   past_cases: string | null;
   open_to_contact: boolean;
   is_public: boolean;
+  avatar_url?: string | null;
+  gender?: string | null;
+  contacted?: boolean;
+  conversation_id?: string | null;
 }
 
 export type FollowerTier = "under_10k" | "10k_to_100k" | "over_100k";
@@ -110,6 +114,39 @@ export interface SponsorshipInterest {
   from_brand_name?: string;
   status: string;
   admin_read: boolean;
+  created_at: string;
+}
+
+export type ConversationType = "kol_contact" | "marketing_request" | "commercial_opportunity" | "sponsorship_seek" | "sponsorship_offer";
+export type ConversationStatus = "pending" | "in_progress" | "closed";
+
+export interface Conversation {
+  id: string;
+  brand_user_id: string;
+  conversation_type: ConversationType;
+  title: string;
+  target_kol_id?: string | null;
+  opportunity_slug?: string | null;
+  status: ConversationStatus;
+  withdrawn: boolean;
+  metadata: Record<string, unknown>;
+  last_message_at: string;
+  created_at: string;
+  brand_name?: string | null;
+  brand_email?: string;
+  kol_name?: string | null;
+  kol_avatar_url?: string | null;
+  last_message?: string | null;
+  unread_count?: number;
+}
+
+export interface ConversationMessage {
+  id: string;
+  conversation_id: string;
+  sender_user_id: string;
+  sender_role: UserRole;
+  sender_email: string;
+  body: string;
   created_at: string;
 }
 

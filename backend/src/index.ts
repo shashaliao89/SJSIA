@@ -12,6 +12,7 @@ import brandsRoutes from "./routes/brands.js";
 import notificationsRoutes from "./routes/notifications.js";
 import eventsRoutes from "./routes/events.js";
 import sponsorshipsRoutes from "./routes/sponsorships.js";
+import conversationsRoutes from "./routes/conversations.js";
 
 dotenv.config();
 
@@ -55,6 +56,7 @@ app.use("/api/brands", brandsRoutes);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/events", eventsRoutes);
 app.use("/api/sponsorships", sponsorshipsRoutes);
+app.use("/api/conversations", conversationsRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: "Not found" });

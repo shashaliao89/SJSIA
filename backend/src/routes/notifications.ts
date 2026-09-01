@@ -5,7 +5,7 @@ import { syncGoogleSponsorshipsIfDue } from "../lib/google-sponsorships.js";
 
 const router = Router();
 
-router.get("/", requireAuth, requireRole("admin"), async (_req, res) => {
+router.get("/", requireAuth, requireRole("admin"), async (req, res) => {
   try {
     await syncGoogleSponsorshipsIfDue();
   } catch (error) {
@@ -47,12 +47,21 @@ router.get("/", requireAuth, requireRole("admin"), async (_req, res) => {
   );
 
   const unreadContacts = contacts.rows.filter((r) => !r.admin_read).length;
+  const conversationUnread = await pool.query(
+    `SELECT COUNT(*)::int AS count FROM conversation_messages cm
+     JOIN conversations c ON c.id=cm.conversation_id
+     JOIN users sender ON sender.id=cm.sender_user_id
+     WHERE sender.role='brand' AND cm.created_at>COALESCE((
+       SELECT last_read_at FROM conversation_reads WHERE conversation_id=c.id AND user_id=$1
+     ), 'epoch')`,
+    [req.user!.id]
+  );
 
   res.json({
     contact_requests: contacts.rows,
     pending_applications: applications.rows,
     sponsorship_interests: sponsorshipInterests.rows,
-    unread_count: unreadContacts + applications.rows.length + sponsorshipInterests.rows.filter((r) => !r.admin_read).length,
+    unread_count: Number(conversationUnread.rows[0]?.count ?? 0) + unreadContacts + applications.rows.length,
   });
 });
 
