@@ -17,7 +17,6 @@ export default function BrandKolsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedTier, setSelectedTier] = useState<FollowerTier | "all">("all");
   const [selectedGender, setSelectedGender] = useState("all");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [contacting, setContacting] = useState<KolProfile | null>(null);
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -28,13 +27,11 @@ export default function BrandKolsPage() {
   }
   useEffect(() => { load().catch(() => setKols([])).finally(() => setLoading(false)); }, [token]);
 
-  const tags = useMemo(() => Array.from(new Set(kols.flatMap(kol => kol.content_types ?? []))).sort((a,b) => a.localeCompare(b,"zh-Hant")), [kols]);
   const filtered = useMemo(() => kols.filter(kol => {
     const tierMatch = selectedTier === "all" || (kol.follower_tier ?? followerTier(kol.follower_count ?? 0)) === selectedTier;
     const genderMatch = selectedGender === "all" || kol.gender === selectedGender;
-    const tagMatch = selectedTags.length === 0 || selectedTags.every(tag => kol.content_types?.includes(tag));
-    return tierMatch && genderMatch && tagMatch;
-  }), [kols, selectedTier, selectedGender, selectedTags]);
+    return tierMatch && genderMatch;
+  }), [kols, selectedTier, selectedGender]);
 
   async function openConversation(kol: KolProfile) {
     if (!kol.conversation_id) { setContacting(kol); return; }
@@ -53,18 +50,17 @@ export default function BrandKolsPage() {
     finally { setSubmitting(false); }
   }
 
-  const clearFilters = () => { setSelectedTier("all"); setSelectedGender("all"); setSelectedTags([]); };
-  const hasFilters = selectedTier !== "all" || selectedGender !== "all" || selectedTags.length > 0;
+  const clearFilters = () => { setSelectedTier("all"); setSelectedGender("all"); };
+  const hasFilters = selectedTier !== "all" || selectedGender !== "all";
 
   return <DashboardShell role="brand" title="品牌會員中心" nav={BRAND_NAV}>
-    <PageHeader title="創作者資料庫" description="依粉絲規模、內容定位與性別尋找合適創作者，並直接建立協會媒合對話。" />
+    <PageHeader title="創作者資料庫" description="依粉絲規模與性別尋找合適創作者，查看定位資訊並直接建立協會媒合對話。" />
     {loading ? <EmptyState message="載入中…" /> : kols.length === 0 ? <EmptyState message="目前尚無公開 KOL 資料" /> : <>
       <section className="mb-7 rounded-3xl border border-[#CFFF1A]/20 bg-gradient-to-br from-[#CFFF1A]/10 to-white/[0.02] p-4 sm:p-6" aria-label="KOL 篩選器">
         <div className="flex items-center justify-between gap-3"><div><h2 className="font-black">篩選合適 KOL</h2><p className="mt-1 text-xs text-gray-400">目前顯示 {filtered.length}／{kols.length} 位</p></div>{hasFilters ? <button onClick={clearFilters} className="rounded-lg border border-white/15 px-3 py-2 text-xs font-bold text-gray-300">清除全部</button> : null}</div>
         <div className="mt-5 space-y-5">
           <div><p className="mb-2 text-xs font-black text-gray-400">粉絲數</p><div className="flex flex-wrap gap-2"><FilterButton active={selectedTier === "all"} onClick={() => setSelectedTier("all")}>全部</FilterButton>{FOLLOWER_TIERS.map(tier => <FilterButton key={tier.key} active={selectedTier === tier.key} onClick={() => setSelectedTier(tier.key)}>{tier.label}</FilterButton>)}</div></div>
           <div><p className="mb-2 text-xs font-black text-gray-400">性別</p><div className="flex flex-wrap gap-2">{["all","女性","男性","其他","不公開"].map(gender => <FilterButton key={gender} active={selectedGender === gender} onClick={() => setSelectedGender(gender)}>{gender === "all" ? "全部" : gender}</FilterButton>)}</div></div>
-          <div><p className="mb-2 text-xs font-black text-gray-400">KOL 定位標籤（可複選）</p><div className="flex max-h-32 flex-wrap gap-2 overflow-y-auto">{tags.map(tag => <FilterButton key={tag} active={selectedTags.includes(tag)} onClick={() => setSelectedTags(current => current.includes(tag) ? current.filter(item => item !== tag) : [...current, tag])}>{tag}</FilterButton>)}</div></div>
         </div>
       </section>
       {filtered.length === 0 ? <EmptyState message="沒有符合目前篩選條件的 KOL" /> : <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">{filtered.map(kol => <Card key={kol.id} className="flex h-full flex-col overflow-hidden p-5">
