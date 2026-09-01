@@ -16,7 +16,7 @@ export default function BrandConversationsPage() {
         <p className="hidden text-xs text-gray-500 sm:block">需求越具體，媒合越有效率</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <QuickLinkCard href="/dashboard/brand/campaigns?view=request" title="規劃品牌行銷合作" description="從 3 萬、20 萬或 50 萬公版開始，調整成品牌專屬年度行銷需求。" action="建立行銷案件" />
+        <QuickLinkCard href="/dashboard/brand/campaigns/new" title="規劃品牌行銷合作" description="從 3 萬、20 萬或 50 萬公版開始，調整成品牌專屬年度行銷需求。" action="建立行銷案件" />
         <QuickLinkCard href="/dashboard/brand/sponsorships" title="發起贊助品需求" description="尋求活動贊助，或提供產品資源，交由協會協助媒合。" action="建立贊助案件" />
       </div>
     </section>
