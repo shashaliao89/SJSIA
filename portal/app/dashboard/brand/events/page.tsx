@@ -49,8 +49,8 @@ export default function BrandEventsPage() {
   }
 
   return (
-    <DashboardShell role="brand" title="品牌方 Dashboard" nav={BRAND_NAV}>
-      <PageHeader title="每月協會活動" description="查看活動資訊，並可申請活動露出。" />
+    <DashboardShell role="brand" title="品牌會員中心" nav={BRAND_NAV}>
+      <PageHeader title="每月協會活動" description="每月固定參與協會交流，累積品牌能見度、信任與合作關係。" />
       {message ? <p className="mb-4 text-sm font-semibold text-[#CFFF1A]">{message}</p> : null}
       {events.length === 0 ? (
         <EmptyState message="目前尚無活動" />

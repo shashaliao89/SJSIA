@@ -56,8 +56,8 @@ export default function BrandKolsPage() {
   const clearFilters = () => { setSelectedTier("all"); setSelectedGender("all"); setSelectedTags([]); };
   const hasFilters = selectedTier !== "all" || selectedGender !== "all" || selectedTags.length > 0;
 
-  return <DashboardShell role="brand" title="品牌方 Dashboard" nav={BRAND_NAV}>
-    <PageHeader title="KOL 資料庫" description="依粉絲規模、內容定位與性別尋找合適創作者，並直接建立協會媒合對話。" />
+  return <DashboardShell role="brand" title="品牌會員中心" nav={BRAND_NAV}>
+    <PageHeader title="創作者資料庫" description="依粉絲規模、內容定位與性別尋找合適創作者，並直接建立協會媒合對話。" />
     {loading ? <EmptyState message="載入中…" /> : kols.length === 0 ? <EmptyState message="目前尚無公開 KOL 資料" /> : <>
       <section className="mb-7 rounded-3xl border border-[#CFFF1A]/20 bg-gradient-to-br from-[#CFFF1A]/10 to-white/[0.02] p-4 sm:p-6" aria-label="KOL 篩選器">
         <div className="flex items-center justify-between gap-3"><div><h2 className="font-black">篩選合適 KOL</h2><p className="mt-1 text-xs text-gray-400">目前顯示 {filtered.length}／{kols.length} 位</p></div>{hasFilters ? <button onClick={clearFilters} className="rounded-lg border border-white/15 px-3 py-2 text-xs font-bold text-gray-300">清除全部</button> : null}</div>

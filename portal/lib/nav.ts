@@ -1,10 +1,9 @@
 export const BRAND_NAV = [
   { href: "/dashboard/brand", label: "總覽" },
-  { href: "/dashboard/brand/kols", label: "KOL 資料庫" },
-  { href: "/dashboard/brand/campaigns", label: "商業合作機會" },
-  { href: "/dashboard/brand/sponsorships", label: "贊助品媒合" },
   { href: "/dashboard/brand/conversations", label: "我的案件" },
-  { href: "/dashboard/brand/events", label: "協會活動" },
+  { href: "/dashboard/brand/campaigns", label: "商業合作機會" },
+  { href: "/dashboard/brand/kols", label: "創作者資料庫" },
+  { href: "/dashboard/brand/events", label: "每月協會活動" },
   { href: "/dashboard/brand/profile", label: "品牌基本資料" },
 ];
 

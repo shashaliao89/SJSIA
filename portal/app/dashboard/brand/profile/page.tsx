@@ -48,7 +48,7 @@ export default function BrandProfilePage() {
 
   if (!profile) {
     return (
-      <DashboardShell role="brand" title="品牌方 Dashboard" nav={BRAND_NAV}>
+      <DashboardShell role="brand" title="品牌會員中心" nav={BRAND_NAV}>
         <PageHeader title="品牌基本資料" />
         <Card><p className="text-gray-400">載入中…</p></Card>
       </DashboardShell>
@@ -56,7 +56,7 @@ export default function BrandProfilePage() {
   }
 
   return (
-    <DashboardShell role="brand" title="品牌方 Dashboard" nav={BRAND_NAV}>
+    <DashboardShell role="brand" title="品牌會員中心" nav={BRAND_NAV}>
       <PageHeader
         title="品牌基本資料"
         description="維護品牌公開資訊，供 KOL 在品牌資料庫瀏覽。"
