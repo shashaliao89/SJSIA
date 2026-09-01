@@ -1,39 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { api } from "@/lib/api";
-import { useAuth } from "@/lib/auth";
-import type { Conversation } from "@/lib/types";
-import { Button, DashboardShell, PageHeader, QuickLinkCard } from "@/components/DashboardShell";
-import { ConversationModal } from "@/components/ConversationModal";
+import { DashboardShell, PageHeader, QuickLinkCard } from "@/components/DashboardShell";
 import { BRAND_NAV } from "@/lib/nav";
 
 export default function BrandConversationsPage() {
-  const { token } = useAuth();
-  const [support, setSupport] = useState<Conversation | null>(null);
-  const [openingSupport, setOpeningSupport] = useState(false);
-  const [supportError, setSupportError] = useState("");
-
-  async function openSupport() {
-    setOpeningSupport(true);
-    setSupportError("");
-    try {
-      const data = await api<{ conversation: Conversation }>("/api/conversations/support", { method: "POST", token });
-      setSupport(data.conversation);
-    } catch {
-      setSupportError("聊天室暫時無法開啟，請稍後再試。");
-    } finally {
-      setOpeningSupport(false);
-    }
-  }
-
   return <DashboardShell role="brand" title="品牌會員中心" nav={BRAND_NAV}>
-    <PageHeader title="我的案件" description="發起品牌行銷或贊助品需求，也可以直接聯繫協會管理員討論合作方向。" />
-    <section className="mb-8 flex flex-col gap-5 rounded-3xl border border-white/10 bg-gradient-to-r from-white/[0.06] to-transparent p-5 sm:p-7 lg:flex-row lg:items-center lg:justify-between">
-      <div className="max-w-2xl"><p className="text-xs font-black tracking-[0.18em] text-[#CFFF1A]">SJSIA MEMBER SUPPORT</p><h2 className="mt-2 text-xl font-black">需要協會協助嗎？</h2><p className="mt-2 text-sm leading-relaxed text-gray-400">不確定該選哪種合作、需要補充案件資訊，或有其他會員問題，都可以直接開啟客服聊天室。</p>{supportError ? <p className="mt-2 text-sm font-bold text-red-400">{supportError}</p> : null}</div>
-      <Button className="shrink-0" disabled={openingSupport} onClick={openSupport}>{openingSupport ? "開啟中…" : "直接聯繫管理員"}</Button>
-    </section>
+    <PageHeader title="我的案件" description="發起品牌行銷或贊助品需求，由協會協助規劃與媒合合作方向。" />
     <section className="mb-9">
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
@@ -57,6 +30,5 @@ export default function BrandConversationsPage() {
         <QuickLinkCard href="/dashboard/brand/sponsorships" title="發起贊助品需求" description="尋求活動贊助，或提供產品資源，交由協會協助媒合。" action="建立贊助案件" />
       </div>
     </section>
-    {support ? <ConversationModal conversation={support} onClose={() => setSupport(null)} /> : null}
   </DashboardShell>;
 }
