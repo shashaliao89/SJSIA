@@ -8,7 +8,7 @@ import { DashboardShell, PageHeader, Card, Badge, Button, EmptyState } from "@/c
 import { ConversationModal } from "@/components/ConversationModal";
 import { ADMIN_NAV } from "@/lib/nav";
 
-const types=[{key:"all",label:"全部"},{key:"kol_contact",label:"KOL 洽談"},{key:"marketing_request",label:"行銷需求"},{key:"commercial_opportunity",label:"商業提案"},{key:"sponsorship_seek",label:"尋求贊助"},{key:"sponsorship_offer",label:"提供贊助"}];
+const types=[{key:"all",label:"全部"},{key:"general_support",label:"協會客服"},{key:"kol_contact",label:"KOL 洽談"},{key:"marketing_request",label:"行銷需求"},{key:"commercial_opportunity",label:"商業提案"},{key:"sponsorship_seek",label:"尋求贊助"},{key:"sponsorship_offer",label:"提供贊助"}];
 const statuses=[{key:"all",label:"全部狀態"},{key:"pending",label:"待處理"},{key:"in_progress",label:"進行中"},{key:"closed",label:"已結案"}];
 const typeLabel=Object.fromEntries(types.map(item=>[item.key,item.label])); const statusLabel=Object.fromEntries(statuses.map(item=>[item.key,item.label]));
 

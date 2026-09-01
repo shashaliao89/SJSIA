@@ -277,7 +277,7 @@ CREATE TABLE IF NOT EXISTS conversations (
   brand_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   conversation_type VARCHAR(40) NOT NULL CHECK (conversation_type IN (
     'kol_contact', 'marketing_request', 'commercial_opportunity',
-    'sponsorship_seek', 'sponsorship_offer'
+    'sponsorship_seek', 'sponsorship_offer', 'general_support'
   )),
   title VARCHAR(255) NOT NULL,
   target_kol_id UUID REFERENCES kol_profiles(id) ON DELETE SET NULL,
@@ -301,6 +301,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversations_brand_30k_benefit
   WHERE conversation_type='marketing_request' AND metadata->>'template'='30k';
 CREATE INDEX IF NOT EXISTS idx_conversations_brand ON conversations(brand_user_id, last_message_at DESC);
 CREATE INDEX IF NOT EXISTS idx_conversations_status ON conversations(status, last_message_at DESC);
+
+ALTER TABLE conversations DROP CONSTRAINT IF EXISTS conversations_conversation_type_check;
+ALTER TABLE conversations ADD CONSTRAINT conversations_conversation_type_check CHECK (conversation_type IN (
+  'kol_contact', 'marketing_request', 'commercial_opportunity',
+  'sponsorship_seek', 'sponsorship_offer', 'general_support'
+));
 
 CREATE TABLE IF NOT EXISTS conversation_messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

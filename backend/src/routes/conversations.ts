@@ -124,6 +124,25 @@ router.get("/marketing-benefit", requireRole("brand"), async (req, res) => {
   });
 });
 
+router.post("/support", requireRole("brand"), async (req, res) => {
+  const existing = await pool.query(
+    `SELECT * FROM conversations
+     WHERE brand_user_id=$1 AND conversation_type='general_support' AND status<>'closed'
+     ORDER BY created_at DESC LIMIT 1`,
+    [req.user!.id]
+  );
+  if (existing.rows.length) return res.json({ conversation: existing.rows[0], created: false });
+
+  const conversation = await createConversationWithMessage({
+    brandUserId: req.user!.id,
+    type: "general_support",
+    title: "聯繫協會管理員",
+    metadata: { source: "brand_case_center" },
+    message: "您好，我想聯繫協會管理員。",
+  });
+  res.status(201).json({ conversation, created: true });
+});
+
 router.post("/marketing", requireRole("brand"), async (req, res) => {
   const parsed = marketingSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });

@@ -117,7 +117,7 @@ export interface SponsorshipInterest {
   created_at: string;
 }
 
-export type ConversationType = "kol_contact" | "marketing_request" | "commercial_opportunity" | "sponsorship_seek" | "sponsorship_offer";
+export type ConversationType = "kol_contact" | "marketing_request" | "commercial_opportunity" | "sponsorship_seek" | "sponsorship_offer" | "general_support";
 export type ConversationStatus = "pending" | "in_progress" | "closed";
 
 export interface Conversation {
