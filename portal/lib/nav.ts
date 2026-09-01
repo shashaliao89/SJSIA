@@ -1,6 +1,7 @@
 export const BRAND_NAV = [
   { href: "/dashboard/brand", label: "總覽" },
   { href: "/dashboard/brand/conversations", label: "我的案件" },
+  { href: "/dashboard/brand/history", label: "歷史紀錄" },
   { href: "/dashboard/brand/campaigns", label: "商業合作機會" },
   { href: "/dashboard/brand/kols", label: "創作者資料庫" },
   { href: "/dashboard/brand/events", label: "每月協會活動" },

@@ -58,15 +58,11 @@ export default function BrandConversationsPage() {
         <QuickLinkCard href="/dashboard/brand/sponsorships" title="發起贊助品需求" description="尋求活動贊助，或提供產品資源，交由協會協助媒合。" action="建立贊助案件" />
       </div>
     </section>
-    <section className="mb-10">
+    <section>
       <div className="mb-4 flex items-end justify-between gap-4">
         <div><p className="text-xs font-black tracking-[0.18em] text-[#CFFF1A]">ACTIVE CHATS</p><h3 className="mt-1 text-xl font-black">進行中的案件聊天室</h3><p className="mt-1 text-sm text-gray-500">點擊案件即可查看進度並回覆協會管理員。</p></div>
       </div>
       <ConversationList mode="active" emptyMessage="目前沒有進行中的案件；可從上方發起需求或直接聯繫管理員。" />
-    </section>
-    <section className="border-t border-white/10 pt-8">
-      <div className="mb-4"><p className="text-xs font-black tracking-[0.18em] text-gray-500">CASE HISTORY</p><h3 className="mt-1 text-xl font-black">歷史紀錄</h3><p className="mt-1 text-sm text-gray-500">已結案或已撤回的需求集中保留於此，隨時可以查看過往對話。</p></div>
-      <ConversationList mode="history" compact emptyMessage="目前尚無歷史案件" />
     </section>
     {support ? <ConversationModal conversation={support} onClose={() => setSupport(null)} /> : null}
   </DashboardShell>;

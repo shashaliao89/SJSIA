@@ -67,7 +67,8 @@ export default function BrandDashboardPage() {
       </section>
 
       <div className="mt-8 grid gap-4 md:grid-cols-2">
-        <QuickLinkCard href="/dashboard/brand/conversations" title="我的案件" description="發起客製化行銷或贊助需求，集中追蹤引薦、對話與歷史紀錄。" action={unread ? `${unread} 則訊息待回覆` : "發起或查看案件"} />
+        <QuickLinkCard href="/dashboard/brand/conversations" title="我的案件" description="發起客製化行銷或贊助需求，集中追蹤進行中的案件與協會對話。" action={unread ? `${unread} 則訊息待回覆` : "發起或查看案件"} />
+        <QuickLinkCard href="/dashboard/brand/history" title="歷史紀錄" description="查看已結案或已撤回的合作需求、創作者洽談與完整訊息紀錄。" action="查看過往案件" />
         <QuickLinkCard href="/dashboard/brand/campaigns" title="商業合作機會" description="查看協會主動策劃、目前開放中的品牌合作提案。" action="查看機會" />
         <QuickLinkCard href="/dashboard/brand/kols" title="創作者資料庫" description="依粉絲規模與定位篩選協會創作者，查看 IG 並發起合作洽談。" action="探索創作者" />
         <QuickLinkCard href="/dashboard/brand/events" title="每月協會活動" description="透過固定交流增加能見度、建立關係，並申請品牌露出。" action={nextEvent ? `下一場：${formatDate(nextEvent.event_date)}` : "查看活動"} />
