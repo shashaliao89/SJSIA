@@ -296,6 +296,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversations_brand_kol
 CREATE UNIQUE INDEX IF NOT EXISTS idx_conversations_brand_opportunity
   ON conversations(brand_user_id, opportunity_slug)
   WHERE conversation_type='commercial_opportunity' AND opportunity_slug IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_conversations_brand_30k_benefit
+  ON conversations(brand_user_id)
+  WHERE conversation_type='marketing_request' AND metadata->>'template'='30k';
 CREATE INDEX IF NOT EXISTS idx_conversations_brand ON conversations(brand_user_id, last_message_at DESC);
 CREATE INDEX IF NOT EXISTS idx_conversations_status ON conversations(status, last_message_at DESC);
 

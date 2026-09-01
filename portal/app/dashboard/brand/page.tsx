@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth";
 import type { Conversation, EventItem, KolProfile } from "@/lib/types";
 import { DashboardShell, PageHeader, QuickLinkCard, StatCard, Card } from "@/components/DashboardShell";
 import { BRAND_NAV, formatDate } from "@/lib/nav";
+import { MarketingBenefitBanner } from "@/components/MarketingBenefitBanner";
 
 export default function BrandDashboardPage() {
   const { token, user } = useAuth();
@@ -41,6 +42,7 @@ export default function BrandDashboardPage() {
   return (
     <DashboardShell role="brand" title="品牌會員中心" nav={BRAND_NAV}>
       <PageHeader title={`歡迎回來${brandName ? `，${brandName}` : ""}`} description="每月提出明確需求、建立可信任的創作者關係，並持續追蹤合作成果。" />
+      <MarketingBenefitBanner className="mb-8" />
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:gap-4">
         <StatCard label="已建立創作者連結" value={loaded ? connectedCreators : "—"} hint={`共 ${kols.length} 位協會創作者`} tone="accent" />
         <StatCard label="進行中案件" value={loaded ? inProgress : "—"} tone={inProgress ? "warning" : "default"} />

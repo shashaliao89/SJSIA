@@ -1,11 +1,12 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Button, Card, DashboardShell, PageHeader } from "@/components/DashboardShell";
 import { BRAND_NAV } from "@/lib/nav";
+import type { MarketingBenefit } from "@/lib/types";
 
 const templates = {
   "30k": {
@@ -51,7 +52,17 @@ export default function NewMarketingRequestPage() {
   const router = useRouter();
   const [selected, setSelected] = useState<keyof typeof templates>("30k");
   const [submitting, setSubmitting] = useState(false);
+  const [benefit, setBenefit] = useState<MarketingBenefit | null>(null);
   const template = templates[selected];
+
+  useEffect(() => {
+    api<MarketingBenefit>("/api/conversations/marketing-benefit", { token })
+      .then((data) => {
+        setBenefit(data);
+        if (data.used) setSelected("200k");
+      })
+      .catch(() => setBenefit(null));
+  }, [token]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -70,7 +81,10 @@ export default function NewMarketingRequestPage() {
   return <DashboardShell role="brand" title="品牌會員中心" nav={BRAND_NAV}>
     <PageHeader title="發起客製化行銷需求" description="參考協會招商簡報選擇接近需求的預算規模，再依品牌目標調整；預設內容是規劃起點，實際規模與產出將由協會確認。" />
     <div className="mb-6 grid gap-3 md:grid-cols-3">
-      {Object.entries(templates).map(([key, item]) => <button key={key} type="button" onClick={() => setSelected(key as keyof typeof templates)} className={`rounded-2xl border p-5 text-left transition ${selected === key ? "border-[#CFFF1A] bg-[#CFFF1A]/10" : "border-white/10 bg-white/[0.03] hover:border-white/25"}`}><p className="text-xl font-black">{item.name}</p><p className="mt-1 text-sm font-bold text-gray-300">{item.subtitle}</p><p className="mt-3 text-xs leading-relaxed text-gray-500">{item.recommendedFor}</p></button>)}
+      {Object.entries(templates).map(([key, item]) => {
+        const unavailable = key === "30k" && benefit?.used;
+        return <button key={key} type="button" disabled={unavailable} onClick={() => setSelected(key as keyof typeof templates)} className={`rounded-2xl border p-5 text-left transition disabled:cursor-not-allowed disabled:opacity-45 ${selected === key ? "border-[#CFFF1A] bg-[#CFFF1A]/10" : "border-white/10 bg-white/[0.03] hover:border-white/25"}`}><div className="flex items-start justify-between gap-2"><p className="text-xl font-black">{item.name}</p>{key === "30k" ? <span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${unavailable ? "bg-white/10 text-gray-400" : "bg-[#CFFF1A] text-black"}`}>{unavailable ? "權益已使用" : "會員專屬 1 次"}</span> : null}</div><p className="mt-1 text-sm font-bold text-gray-300">{item.subtitle}</p><p className="mt-3 text-xs leading-relaxed text-gray-500">{item.recommendedFor}</p></button>;
+      })}
     </div>
     <section className="mb-6 rounded-2xl border border-[#CFFF1A]/20 bg-[#CFFF1A]/[0.06] p-5">
       <p className="text-xs font-black tracking-widest text-[#CFFF1A]">方案參考依據</p>

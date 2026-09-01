@@ -3,10 +3,12 @@
 import { DashboardShell, PageHeader, QuickLinkCard } from "@/components/DashboardShell";
 import { ConversationList } from "@/components/ConversationList";
 import { BRAND_NAV } from "@/lib/nav";
+import { MarketingBenefitBanner } from "@/components/MarketingBenefitBanner";
 
 export default function BrandConversationsPage() {
   return <DashboardShell role="brand" title="品牌會員中心" nav={BRAND_NAV}>
     <PageHeader title="我的案件" description="從明確需求開始，由協會協助引薦、媒合與追蹤；所有討論與歷史紀錄都集中在這裡。" />
+    <MarketingBenefitBanner className="mb-9" />
     <section className="mb-9">
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>

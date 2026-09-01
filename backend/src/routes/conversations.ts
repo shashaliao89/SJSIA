@@ -107,22 +107,57 @@ router.get("/", async (req, res) => {
   res.json({ conversations: result.rows, page, limit });
 });
 
+router.get("/marketing-benefit", requireRole("brand"), async (req, res) => {
+  const result = await pool.query(
+    `SELECT id, created_at
+     FROM conversations
+     WHERE brand_user_id=$1 AND conversation_type='marketing_request'
+       AND metadata->>'template'='30k'
+     ORDER BY created_at ASC LIMIT 1`,
+    [req.user!.id]
+  );
+  res.json({
+    available: result.rows.length === 0,
+    used: result.rows.length > 0,
+    conversation_id: result.rows[0]?.id ?? null,
+    used_at: result.rows[0]?.created_at ?? null,
+  });
+});
+
 router.post("/marketing", requireRole("brand"), async (req, res) => {
   const parsed = marketingSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
   const d = parsed.data;
-  const conversation = await createConversationWithMessage({
-    brandUserId: req.user!.id,
-    type: "marketing_request",
-    title: `客製化行銷需求｜${d.brand_product}`,
-    metadata: d,
-    message: summary([
-      ["品牌及產品", d.brand_product], ["行銷目標", d.marketing_goal], ["目標受眾", d.target_audience],
-      ["產業類型", d.industry], ["執行期間", d.period], ["希望平台", d.platforms],
-      ["內容形式", d.content_formats], ["預期 KPI", d.expected_kpi], ["預算", d.budget], ["補充需求", d.notes],
-    ]),
-  });
-  res.status(201).json({ conversation });
+  if (d.template === "30k") {
+    const existing = await pool.query(
+      `SELECT id FROM conversations
+       WHERE brand_user_id=$1 AND conversation_type='marketing_request'
+         AND metadata->>'template'='30k' LIMIT 1`,
+      [req.user!.id]
+    );
+    if (existing.rows.length) {
+      return res.status(409).json({ error: "每位團體會員僅可使用一次 3 萬方案，此權益已使用" });
+    }
+  }
+  try {
+    const conversation = await createConversationWithMessage({
+      brandUserId: req.user!.id,
+      type: "marketing_request",
+      title: `客製化行銷需求｜${d.brand_product}`,
+      metadata: d,
+      message: summary([
+        ["品牌及產品", d.brand_product], ["行銷目標", d.marketing_goal], ["目標受眾", d.target_audience],
+        ["產業類型", d.industry], ["執行期間", d.period], ["希望平台", d.platforms],
+        ["內容形式", d.content_formats], ["預期 KPI", d.expected_kpi], ["預算", d.budget], ["補充需求", d.notes],
+      ]),
+    });
+    res.status(201).json({ conversation });
+  } catch (error) {
+    if (d.template === "30k" && typeof error === "object" && error && "code" in error && error.code === "23505") {
+      return res.status(409).json({ error: "每位團體會員僅可使用一次 3 萬方案，此權益已使用" });
+    }
+    throw error;
+  }
 });
 
 router.post("/sponsorship", requireRole("brand"), async (req, res) => {

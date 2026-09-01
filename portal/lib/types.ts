@@ -150,6 +150,13 @@ export interface ConversationMessage {
   created_at: string;
 }
 
+export interface MarketingBenefit {
+  available: boolean;
+  used: boolean;
+  conversation_id: string | null;
+  used_at: string | null;
+}
+
 export interface Product {
   id: string;
   brand_user_id: string;
