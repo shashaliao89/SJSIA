@@ -18,6 +18,13 @@ const marketingSchema = z.object({
   content_formats: z.string().trim().min(1).max(500),
   expected_kpi: z.string().trim().min(1).max(1000),
   budget: z.string().trim().min(1).max(200),
+  event_time: z.string().trim().max(200).optional().default(""),
+  venue: z.string().trim().max(500).optional().default(""),
+  venue_status: z.enum(["已洽談", "指定場域，尚未洽談", "請協會協助建議", "尚未確定"]).optional(),
+  event_type: z.string().trim().max(300).optional().default(""),
+  support_items: z.array(z.enum(["活動設計", "行銷宣傳", "硬體", "人力支援"])).max(4).optional().default([]),
+  participant_count: z.string().trim().max(200).optional().default(""),
+  kol_exposure: z.enum(["需要協會聯繫／邀請", "品牌已自行聯繫／邀請", "不需要", "希望協會提供建議"]).optional(),
   notes: z.string().trim().max(2000).optional().default(""),
 });
 const sponsorshipSchema = z.object({
@@ -168,6 +175,9 @@ router.post("/marketing", requireRole("brand"), async (req, res) => {
         ["品牌及產品", d.brand_product], ["行銷目標", d.marketing_goal], ["目標受眾", d.target_audience],
         ["產業類型", d.industry], ["執行期間", d.period], ["希望平台", d.platforms],
         ["內容形式", d.content_formats], ["預期 KPI", d.expected_kpi], ["預算", d.budget], ["補充需求", d.notes],
+        ["活動時間", d.event_time], ["活動地點", d.venue], ["場地洽談狀態", d.venue_status],
+        ["活動類型", d.event_type], ["希望協會負責的項目", d.support_items.join("、")],
+        ["預計參與人數", d.participant_count], ["KOL 聯繫／邀請曝光", d.kol_exposure],
       ]),
     });
     res.status(201).json({ conversation });

@@ -1,34 +1,43 @@
 "use client";
 
 import Link from "next/link";
-import { DashboardShell, PageHeader, QuickLinkCard } from "@/components/DashboardShell";
+import { DashboardShell, PageHeader } from "@/components/DashboardShell";
 import { BRAND_NAV } from "@/lib/nav";
+
+const REQUEST_TYPES = [
+  {
+    href: "/dashboard/brand/campaigns/new",
+    eyebrow: "品牌行銷",
+    title: "規劃品牌行銷合作",
+    description: "依品牌目標與預算，建立客製化的創作者合作或年度行銷需求。",
+    action: "開始規劃",
+    featured: true,
+  },
+  {
+    href: "/dashboard/brand/sponsorships",
+    eyebrow: "資源媒合",
+    title: "發起贊助品需求",
+    description: "尋求活動贊助或提供產品資源，由協會協助媒合適合的合作對象。",
+    action: "建立需求",
+    featured: false,
+  },
+];
 
 export default function BrandConversationsPage() {
   return <DashboardShell role="brand" title="品牌會員中心" nav={BRAND_NAV}>
-    <PageHeader title="我的案件" description="發起品牌行銷或贊助品需求，由協會協助規劃與媒合合作方向。" />
-    <section className="mb-9">
-      <div className="mb-4 flex items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-black tracking-[0.18em] text-[#CFFF1A]">START A REQUEST</p>
-          <h3 className="mt-1 text-xl font-black">發起客製化需求</h3>
-        </div>
-        <p className="hidden text-xs text-gray-500 sm:block">需求越具體，媒合越有效率</p>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <Link href="/dashboard/brand/campaigns/new" className="group block h-full">
-          <div className="relative flex h-full min-h-40 flex-col overflow-hidden rounded-2xl border border-[#CFFF1A]/45 bg-[#CFFF1A]/[0.11] p-5 shadow-[0_0_36px_rgba(207,255,26,0.07)] transition duration-200 group-hover:-translate-y-0.5 group-hover:border-[#CFFF1A] md:p-6">
-            <div className="absolute -right-10 -top-14 h-36 w-36 rounded-full bg-[#CFFF1A]/15 blur-3xl" />
-            <div className="relative flex flex-1 flex-col">
-              <span className="mb-3 w-fit rounded-full bg-[#CFFF1A] px-2.5 py-1 text-[10px] font-black text-black">主要合作入口</span>
-              <h3 className="font-black text-white">規劃品牌行銷合作</h3>
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-gray-300">從 3 萬、20 萬或 50 萬公版開始，調整成品牌專屬年度行銷需求。</p>
-              <p className="mt-5 text-sm font-black text-[#CFFF1A]">建立行銷案件 →</p>
-            </div>
+    <PageHeader title="我的案件" description="選擇需求類型，協會將協助規劃並媒合合適資源。" />
+    <section className="grid gap-4 md:grid-cols-2">
+      {REQUEST_TYPES.map((item) => <Link key={item.href} href={item.href} className="group block h-full">
+        <article className={`relative flex h-full min-h-52 flex-col overflow-hidden rounded-3xl border p-6 transition duration-200 group-hover:-translate-y-0.5 sm:p-7 ${item.featured ? "border-[#CFFF1A]/50 bg-[#CFFF1A]/[0.09] group-hover:border-[#CFFF1A]" : "border-white/10 bg-white/[0.03] group-hover:border-white/25"}`}>
+          {item.featured ? <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-[#CFFF1A]/15 blur-3xl" /> : null}
+          <div className="relative flex h-full flex-col">
+            <p className={`text-xs font-black tracking-[0.12em] ${item.featured ? "text-[#CFFF1A]" : "text-gray-500"}`}>{item.eyebrow}</p>
+            <h2 className="mt-3 text-xl font-black text-white">{item.title}</h2>
+            <p className="mt-3 flex-1 text-sm leading-7 text-gray-400">{item.description}</p>
+            <span className={`mt-7 inline-flex items-center gap-2 text-sm font-black ${item.featured ? "text-[#CFFF1A]" : "text-white"}`}>{item.action}<span aria-hidden="true" className="transition group-hover:translate-x-1">→</span></span>
           </div>
-        </Link>
-        <QuickLinkCard href="/dashboard/brand/sponsorships" title="發起贊助品需求" description="尋求活動贊助，或提供產品資源，交由協會協助媒合。" action="建立贊助案件" />
-      </div>
+        </article>
+      </Link>)}
     </section>
   </DashboardShell>;
 }

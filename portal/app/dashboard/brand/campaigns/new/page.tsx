@@ -66,11 +66,17 @@ export default function NewMarketingRequestPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const supportItems = formData.getAll("support_items");
+    if (!supportItems.length) {
+      alert("請至少選擇一項希望協會負責的項目。");
+      return;
+    }
     setSubmitting(true);
     try {
-      const body = Object.fromEntries(new FormData(event.currentTarget).entries());
-      await api("/api/conversations/marketing", { method: "POST", token, body: JSON.stringify({ ...body, template: selected }) });
-      router.push("/dashboard/brand/conversations");
+      const body = Object.fromEntries(formData.entries());
+      await api("/api/conversations/marketing", { method: "POST", token, body: JSON.stringify({ ...body, support_items: supportItems, template: selected }) });
+      router.push("/dashboard/brand/history");
     } catch (error) {
       alert(error instanceof ApiError ? error.message : "需求送出失敗");
     } finally {
@@ -92,12 +98,31 @@ export default function NewMarketingRequestPage() {
       <a href="https://docs.google.com/presentation/d/1l5HiG65Ft4K0WLRruK8DxtcBoN-J8rYvJIFEq8QUTG4/edit?usp=sharing" target="_blank" rel="noreferrer" className="mt-3 inline-flex text-sm font-black text-[#CFFF1A] hover:underline">查看團體會員方案簡報 ↗</a>
     </section>
     <Card><form key={selected} onSubmit={submit} className="space-y-5">
-      <div className="grid gap-4 md:grid-cols-2"><Field label="品牌及產品" name="brand_product" /><Field label="產業類型" name="industry" /><Field label="執行期間" name="period" defaultValue={template.period} /><Field label="希望平台" name="platforms" defaultValue={template.platforms} /><Field label="內容形式" name="content_formats" defaultValue={template.formats} /><Field label="預算" name="budget" defaultValue={template.budget} /></div>
-      <TextField label="行銷目標" name="marketing_goal" defaultValue={template.goal} /><TextField label="目標受眾" name="target_audience" defaultValue={template.audience} /><TextField label="預期 KPI" name="expected_kpi" defaultValue={template.kpi} /><TextField label="補充需求" name="notes" defaultValue={template.notes} required={false} />
+      <div className="grid gap-4 md:grid-cols-2"><Field label="品牌及產品" name="brand_product" /><Field label="產業類型" name="industry" /></div>
+      <fieldset className="space-y-4 border-t border-white/10 pt-5">
+        <legend className="px-2 text-lg font-black">活動前期評估</legend>
+        <p className="text-sm leading-6 text-gray-400">請提供目前已知資訊；未確定的項目可填「待定」，協會將協助評估。</p>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Field label="活動時間" name="event_time" maxLength={200} placeholder="日期、時段或預計月份；未定可填待定" />
+          <Field label="地點／指定場域" name="venue" placeholder="城市、場館名稱，或請協會建議" />
+          <SelectField label="場地是否已洽談" name="venue_status" options={["已洽談", "指定場域，尚未洽談", "請協會協助建議", "尚未確定"]} />
+          <Field label="活動類型" name="event_type" maxLength={300} placeholder="例如：運動、演講、餐會、派對或複合活動" />
+          <Field label="預計預算" name="budget" maxLength={200} defaultValue={template.budget} />
+          <Field label="預計參與人數" name="participant_count" maxLength={200} placeholder="例如：100 人、100–200 人或待評估" />
+        </div>
+        <TextField label="活動／行銷目標" name="marketing_goal" maxLength={1000} defaultValue={template.goal} />
+        <fieldset><legend className="mb-2 text-sm font-bold">希望協會負責的項目（可複選，至少一項）</legend><div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{["活動設計", "行銷宣傳", "硬體", "人力支援"].map(item => <label key={item} className="flex cursor-pointer items-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] px-3 py-3 text-sm"><input type="checkbox" name="support_items" value={item} className="!m-0 !h-4 !w-4 shrink-0 accent-[#CFFF1A]" />{item}</label>)}</div></fieldset>
+        <SelectField label="是否需要聯繫／邀請 KOL 曝光" name="kol_exposure" options={["需要協會聯繫／邀請", "品牌已自行聯繫／邀請", "不需要", "希望協會提供建議"]} />
+      </fieldset>
+      <fieldset className="space-y-4 border-t border-white/10 pt-5"><legend className="px-2 text-lg font-black">行銷執行方向</legend>
+        <div className="grid gap-4 md:grid-cols-2"><Field label="執行期間" name="period" maxLength={200} defaultValue={template.period} /><Field label="希望平台" name="platforms" defaultValue={template.platforms} /><Field label="內容形式" name="content_formats" defaultValue={template.formats} /></div>
+        <TextField label="目標受眾" name="target_audience" maxLength={1000} defaultValue={template.audience} /><TextField label="預期 KPI" name="expected_kpi" maxLength={1000} defaultValue={template.kpi} /><TextField label="補充需求" name="notes" defaultValue={template.notes} required={false} />
+      </fieldset>
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><Button variant="secondary" onClick={() => router.push("/dashboard/brand/conversations")}>取消</Button><Button type="submit" disabled={submitting}>{submitting ? "建立案件中…" : "送出需求並建立案件"}</Button></div>
     </form></Card>
   </DashboardShell>;
 }
 
-function Field({ label, name, defaultValue }: { label: string; name: string; defaultValue?: string }) { return <div><label htmlFor={name}>{label}</label><input id={name} name={name} required maxLength={500} defaultValue={defaultValue} /></div>; }
-function TextField({ label, name, defaultValue, required = true }: { label: string; name: string; defaultValue?: string; required?: boolean }) { return <div><label htmlFor={name}>{label}</label><textarea id={name} name={name} rows={3} required={required} maxLength={2000} defaultValue={defaultValue} /></div>; }
+function Field({ label, name, defaultValue, placeholder, maxLength = 500 }: { label: string; name: string; defaultValue?: string; placeholder?: string; maxLength?: number }) { return <div><label htmlFor={name}>{label}</label><input id={name} name={name} required maxLength={maxLength} placeholder={placeholder} defaultValue={defaultValue} /></div>; }
+function TextField({ label, name, defaultValue, required = true, maxLength = 2000 }: { label: string; name: string; defaultValue?: string; required?: boolean; maxLength?: number }) { return <div><label htmlFor={name}>{label}</label><textarea id={name} name={name} rows={3} required={required} maxLength={maxLength} defaultValue={defaultValue} /></div>; }
+function SelectField({ label, name, options }: { label: string; name: string; options: string[] }) { return <div><label htmlFor={name}>{label}</label><select id={name} name={name} required defaultValue=""><option value="" disabled>請選擇</option>{options.map(option => <option key={option} value={option}>{option}</option>)}</select></div>; }
