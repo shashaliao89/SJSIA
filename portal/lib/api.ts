@@ -1,4 +1,9 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const LEGACY_API_URL = "https://sjsia-production.up.railway.app";
+const CURRENT_API_URL = "https://sjsia-production-5a4d.up.railway.app";
+const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = !configuredApiUrl || configuredApiUrl === LEGACY_API_URL
+  ? (process.env.NODE_ENV === "production" ? CURRENT_API_URL : "http://localhost:4000")
+  : configuredApiUrl;
 
 export class ApiError extends Error {
   constructor(

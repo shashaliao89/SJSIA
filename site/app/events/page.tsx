@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { EventsClient, type PublicEvent } from "./EventsClient";
 
-const API_URL = process.env.SJSIA_API_URL ?? "https://sjsia-production.up.railway.app";
+const API_URL = process.env.SJSIA_API_URL === "https://sjsia-production.up.railway.app"
+  ? "https://sjsia-production-5a4d.up.railway.app"
+  : process.env.SJSIA_API_URL ?? "https://sjsia-production-5a4d.up.railway.app";
 
 export const metadata: Metadata = {
   title: "活動公告",
